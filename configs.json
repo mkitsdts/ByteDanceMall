@@ -1,0 +1,8 @@
+{
+    "redis_config" : {
+        "address" : [
+            "localhost:6379"
+        ],
+        "password" : "root"
+    }
+}
