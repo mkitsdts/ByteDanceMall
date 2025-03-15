@@ -13,5 +13,9 @@
             "localhost:6379"
         ],
         "password" : "root"
+    },
+    "authserver_config" : {
+        "address" : "localhost:50051",
+        "default_user" : "world"
     }
 }

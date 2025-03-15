@@ -22,7 +22,20 @@ type RedisConfigs struct {
 	Password string `json:"password"`
 }
 
+type AuthServerConfig struct {
+	Address string `json:"address"`
+	DefaultUsername string `json:"default_username"`
+}
+
 type Configs struct {
 	MysqlConfig MysqlConfigs `json:"sql_config"`
 	RedisConfig RedisConfigs `json:"redis_config"`
+	AuthServerConfig AuthServerConfig `json:"auth_server_config"`
+}
+
+type User struct {
+	Id int64 `json:"id" gorm:"primary_key"`
+	Username string `json:"username"`
+	Email string `json:"email"`
+	Password string `json:"password"`
 }

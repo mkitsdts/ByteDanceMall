@@ -22,7 +22,7 @@ message RegisterResp {
 }
 
 message LoginReq {
-    string email= 1;
+    string email = 1;
     string password = 2;
 }
 

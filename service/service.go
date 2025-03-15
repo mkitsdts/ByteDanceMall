@@ -3,14 +3,17 @@ package service
 import (
 	"bytedancemall/user/model"
 	pb "bytedancemall/user/proto"
+	p "bytedancemall/user/proto/auth"
 	"bytedancemall/user/utils"
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"os"
-	"time"
 
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/driver/mysql"
@@ -25,10 +28,11 @@ type Database struct {
 type UserService struct {
     Db Database
 	Redis *redis.ClusterClient
+	AuthServer p.AuthServiceClient
     pb.UnimplementedUserServiceServer
 }
 
-func initUserService() (Database, *redis.ClusterClient) {
+func initUserService() (Database, *redis.ClusterClient, p.AuthServiceClient) {
 	// 从configs.json中读取数据库和Redis配置
 	// 配置mysql和redis集群
 	file, err := os.Open("configs.json")
@@ -73,6 +77,9 @@ func initUserService() (Database, *redis.ClusterClient) {
 		db.Slaves = append(db.Slaves,slave)
 	}
 
+	// 创建表
+	db.Master.AutoMigrate(&model.User{})
+
 	// 生成redis集群的地址
 	var redisAddrs []string
 	for _, v := range configs.RedisConfig.Configs {
@@ -84,60 +91,102 @@ func initUserService() (Database, *redis.ClusterClient) {
 		Password: configs.RedisConfig.Password,
 	})
 
-	return db, redis
+	// 连接认证中心
+	conn, err := grpc.NewClient(configs.AuthServerConfig.Address)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close()
+	client := p.NewAuthServiceClient(conn)
+	return db, redis, client
 }
 
 // 创建一个新的用户服务实例
 func NewUserService() *UserService {
 	var s UserService
-	s.Db, s.Redis = initUserService()
+	s.Db, s.Redis, s.AuthServer = initUserService()
 	return &s
 }
 
 // Register 注册新用户
 func (s *UserService) Register(ctx context.Context, req *pb.RegisterReq) (*pb.RegisterResp, error) {
-    // 从数据库中检查邮箱是否已存在
-	var user pb.RegisterReq
-	result := s.Db.Slaves[0].Where("email = ?", req.Email).First(&user)
-	if result.Error != nil {
+	// 检查密码是否一致
+	if req.Password != req.ConfirmPassword {
+		return nil, status.Errorf(codes.InvalidArgument, "wrong password")
+	}
+	// 检查redis中是否已存在用户
+	_, err := s.Redis.Get(ctx, req.Email).Result()
+	if err != redis.Nil {
+		return nil, status.Errorf(codes.AlreadyExists, "email already exists")
+	}
+	// 开启事务
+	tx := s.Db.Master.Begin()
+	if tx.Error != nil {
+		return nil, status.Errorf(codes.Internal, "database error")
+	}
+	var user model.User
+    // 检查邮箱是否存在数据库
+	if result := s.Db.Master.Where("email = ?", req.Email).First(&user); result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			// 保存用户信息到数据库
-			user := pb.RegisterReq{
+			// 写入数据库上锁
+			user = model.User{
+				Id: utils.GenerateId(),
+				Username: uuid.New().String(),
 				Email: req.Email,
-				Password: req.Password,
+				Password: utils.EncryptPassword(req.Password),
 			}
-			s.Db.Master.Create(&user)
-			id := utils.GenerateId()
-			s.Redis.Set(ctx, req.Email, id, 0)
-			return &pb.RegisterResp{UserId: id}, nil
+			
+			if result := s.Db.Master.Create(&user); result.Error != nil {
+				tx.Rollback()
+				return nil, status.Errorf(codes.Internal, "database error")
+			}
+			tx.Commit()
+			// 将用户id存入redis
+			if result := s.Redis.Set(ctx, user.Email, user.Id, 0); result.Err() != nil {
+				if result := s.Redis.Set(ctx, strconv.FormatInt(user.Id, 10), user.Password, 0); result.Err() != nil {
+					return &pb.RegisterResp{UserId: user.Id}, status.Errorf(codes.Internal, "set password error")
+				}
+				return &pb.RegisterResp{UserId: user.Id}, status.Errorf(codes.Internal, "set email error")
+			}
+			return &pb.RegisterResp{UserId: user.Id}, nil
 		}
-		return nil, status.Errorf(codes.Internal, "数据库错误")
+		return nil, status.Errorf(codes.Internal, "database error")
 	}
-	// 
-    return nil, status.Errorf(codes.AlreadyExists, "邮箱已存在")
+    return nil, status.Errorf(codes.AlreadyExists, "email already exists")
 }
 
 // Login 用户登录
 func (s *UserService) Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginResp, error) {
 	// 检查用户是否存在
-	var user pb.RegisterReq
-	result := s.Db.Slaves[0].Where("email = ?", req.Email).First(&user)
+	userId, err := s.Redis.Get(ctx, req.Email).Result()
+	if err != nil {
+		if err != redis.Nil {
+			return nil, status.Errorf(codes.Internal, "redis error")
+		}
+	}
+	password := s.Redis.Get(ctx, userId).Val()
+	if password == req.Password {
+		id , err:= strconv.ParseInt(userId, 10, 64)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "parse id error")
+		}
+		return &pb.LoginResp{UserId: id}, nil
+	}
+
+	var user model.User
+	result := s.Db.Master.Where("email = ?", req.Email).First(&user)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "用户不存在")
+			return nil, status.Errorf(codes.NotFound, "user not found")
 		}
-		return nil, status.Errorf(codes.Internal, "数据库错误")
+		return nil, status.Errorf(codes.Internal, "database error")
 	}
 	// 检查密码是否正确
 	if user.Password != req.Password {
-		return nil, status.Errorf(codes.InvalidArgument, "密码错误")
+		return nil, status.Errorf(codes.InvalidArgument, "wrong password")
 	}
-	// 生成token
-	token := time.Now().Format("2006-01-02 15:04:05")
-	// 将token存入redis
-	err := s.Redis.Set(ctx, req.Email, token, 0).Err()
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "redis错误")
-	}
-	return &pb.LoginResp{}, nil
+	// 交给认证中心
+	s.AuthServer.DeliverTokenByRPC(ctx, &p.DeliverTokenReq{UserId: user.Id})
+	return &pb.LoginResp{UserId: user.Id}, nil
 }
