@@ -78,6 +78,7 @@ func (s *AuthService) VerifyTokenByRPC(ctx context.Context, req *pb.VerifyTokenR
 	// 字符串转换成int64
 	userIdInt, err := strconv.ParseInt(userId, 10, 64)
 	if err != nil {
+		// 系统错误
 		return &pb.VerifyResp{Res: false}, err
 	}
 	// 验证token
