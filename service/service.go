@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-
+	"time"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -54,6 +54,7 @@ func initUserService() (Database, *redis.ClusterClient) {
 	if err != nil {
 		panic(err)
 	}
+	db.Master.AutoMigrate(&model.Product{})
 	for i := 1; i < len(configs.MysqlConfig.Configs); i++ {
 		slaveDsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 			configs.MysqlConfig.Configs[i].User,
@@ -66,6 +67,7 @@ func initUserService() (Database, *redis.ClusterClient) {
 		if err != nil {
 			panic(err)
 		}
+		slave.AutoMigrate(&model.Product{})
 		db.Slaves = append(db.Slaves,slave)
 	}
 
@@ -134,24 +136,54 @@ func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReq) 
 }
 
 func (s *ProductService) ListProSearchProductsducts(ctx context.Context, req *pb.SearchProductsReq) (*pb.SearchProductsResp, error) {
-	// 查询商品
-	var products []model.Product
-	result := s.Db.Master.Where("name LIKE ?", "%"+req.Query+"%").Find(&products)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	// 将商品转换为proto格式
-	var respProducts []*pb.Product
-	for _, v := range products {
-		respProducts = append(respProducts, &pb.Product{
-			Id:          v.ID,
-			Name:        v.Name,
-			Description: v.Description,
-			Price:       v.Price,
-		})
-	}
-	// 返回商品
-	return &pb.SearchProductsResp{
-		Results: respProducts,
-	}, nil
+	// 参数验证
+    if req.Query == "" {
+        return &pb.SearchProductsResp{Results: []*pb.Product{}}, nil
+    }
+    
+    // 尝试从缓存获取结果
+    cacheKey := fmt.Sprintf("product:search:%s", req.Query)
+    cachedData, err := s.Redis.Get(ctx, cacheKey).Bytes()
+    if err == nil {
+        // 缓存命中
+        var products []*pb.Product
+        if err := json.Unmarshal(cachedData, &products); err == nil {
+            return &pb.SearchProductsResp{Results: products}, nil
+        }
+    }
+    
+    // 缓存未命中，从数据库查询
+    var products []model.Product
+    
+    // 限制返回的最大记录数，避免返回过多数据
+    const maxResults = 100
+    
+    result := s.Db.Master.Where("name LIKE ?", "%"+req.Query+"%").Limit(maxResults).Find(&products)
+    
+    if result.Error != nil {
+        return nil, result.Error
+    }
+    
+    // 将商品转换为proto格式
+    var respProducts []*pb.Product
+    for _, v := range products {
+        respProducts = append(respProducts, &pb.Product{
+            Id:          v.ID,
+            Name:        v.Name,
+            Description: v.Description,
+            Price:       v.Price,
+        })
+    }
+    
+    // 将结果缓存到Redis，设置过期时间为5分钟
+    if len(respProducts) > 0 {
+        cacheData, err := json.Marshal(respProducts)
+        if err == nil {
+            s.Redis.Set(ctx, cacheKey, cacheData, 5*time.Minute)
+        }
+    }
+    
+    return &pb.SearchProductsResp{
+        Results: respProducts,
+    }, nil
 }
