@@ -28,7 +28,7 @@ type Configs struct {
 }
 
 type CartItem struct {
-	UserId uint32 `json:"id"`
-	ProductID uint32 `json:"product_id"`
-	Quantity int32 `json:"quantity"`
+    UserId    uint32 `json:"id" gorm:"primaryKey;column:user_id"`
+    ProductID uint32 `json:"product_id" gorm:"primaryKey"`
+    Quantity  int32  `json:"quantity"`
 }

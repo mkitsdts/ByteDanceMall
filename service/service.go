@@ -3,10 +3,12 @@ package service
 import (
 	"bytedancemall/cart/model"
 	pb "bytedancemall/cart/proto"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
-	"context"
+	"strconv"
+
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -53,6 +55,7 @@ func initCartService() (Database, *redis.ClusterClient) {
 	if err != nil {
 		panic(err)
 	}
+	db.Master.AutoMigrate(&model.CartItem{})
 	for i := 1; i < len(configs.MysqlConfig.Configs); i++ {
 		slaveDsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 			configs.MysqlConfig.Configs[i].User,
@@ -65,6 +68,7 @@ func initCartService() (Database, *redis.ClusterClient) {
 		if err != nil {
 			panic(err)
 		}
+		slave.AutoMigrate(&model.CartItem{})
 		db.Slaves = append(db.Slaves,slave)
 	}
 
@@ -94,15 +98,24 @@ func (s *CartService) AddItem(ctx context.Context, req *pb.AddItemReq) (*pb.AddI
 	// 从请求中获取用户ID和商品信息
 	userId := req.UserId
 	item := req.Item
+	// 判断数据库中是否已经存在该商品
+	var cartItem model.CartItem
 	
-	// 直接存至数据库
-	s.Db.Master.Create(&model.CartItem{
-		UserId: userId,
-		ProductID: item.ProductId,
-		Quantity: item.Quantity,
-	})
-
-	// 返回成功
+	if result := s.Db.Master.Where("user_id = ? AND product_id = ?", userId, item.ProductId).First(&cartItem); result.Error != nil {
+		// 不存在
+		if result.Error == gorm.ErrRecordNotFound {
+			s.Db.Master.Create(&model.CartItem{
+				UserId: userId,
+				ProductID: item.ProductId,
+				Quantity: item.Quantity,
+			})
+			return &pb.AddItemResp{}, nil
+		}else {
+			return nil, result.Error
+		}
+	}
+	// 存在则更新数量
+	s.Db.Master.Model(&cartItem).Update("quantity", cartItem.Quantity + item.Quantity)
 	return &pb.AddItemResp{}, nil
 }
 
@@ -110,6 +123,26 @@ func (s *CartService) AddItem(ctx context.Context, req *pb.AddItemReq) (*pb.AddI
 func (s *CartService) GetCart(ctx context.Context, req *pb.GetCartReq) (*pb.GetCartResp, error) {
 	// 从请求中获取用户ID
 	userId := req.UserId
+
+	// 从redis中获取购物车信息
+	val, err := s.Redis.Get(ctx, strconv.FormatUint(uint64(userId), 10)).Result()
+	if err == nil {
+		var cartItems []model.CartItem
+		json.Unmarshal([]byte(val), &cartItems)
+		
+		// 将购物车信息转换为proto格式
+		var items []*pb.CartItem
+		for _, item := range cartItems {
+			items = append(items, &pb.CartItem{
+				ProductId: item.ProductID,
+				Quantity: item.Quantity,
+			})
+		}
+		var resp pb.GetCartResp
+		resp.Cart.UserId = userId
+		resp.Cart.Items = items
+		return &resp, nil
+	}
 
 	// 从数据库中获取购物车信息
 	var items []model.CartItem
@@ -126,12 +159,17 @@ func (s *CartService) GetCart(ctx context.Context, req *pb.GetCartReq) (*pb.GetC
 	var resp pb.GetCartResp
 	resp.Cart.UserId = userId
 	resp.Cart.Items = cartItems
+
+	// 将购物车信息存入redis
+	redisValue, _ := json.Marshal(items)
+	s.Redis.Set(ctx, strconv.FormatUint(uint64(userId), 10), redisValue, 0)
 	return &resp, nil
 }
 
-//
+// 清空购物车
 func (s *CartService) EmptyCart(ctx context.Context, req *pb.EmptyCartReq) (*pb.EmptyCartResp, error) {
 	userId := req.UserId
 	s.Db.Master.Where("user_id = ?", userId).Delete(&model.CartItem{})
+	s.Redis.Del(ctx, strconv.FormatUint(uint64(userId), 10))
 	return &pb.EmptyCartResp{}, nil
 }
