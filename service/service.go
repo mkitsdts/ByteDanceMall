@@ -7,10 +7,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
+	"time"
+
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"github.com/google/uuid"
 )
 
 type Database struct {
@@ -118,7 +121,31 @@ func (s *OrderService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq) (*
 }
 
 func (s *OrderService) ListOrder(ctx context.Context, req *pb.ListOrderReq) (*pb.ListOrderResp, error) {
-	// 从数据库中获取订单
+	// 从Redis中获取订单
+	val := s.Redis.Get(ctx, strconv.FormatUint(uint64(req.UserId), 10)).Val()
+	if val != "" {
+		// 返回订单
+		var pbOrders []*pb.Order
+		orders := []model.Order{}
+		json.Unmarshal([]byte(val), &orders)
+		for _, order := range orders {
+			pbOrders = append(pbOrders, &pb.Order{
+				OrderId: order.OrderId,
+				UserId: order.UserId,
+				Email: order.UserEmail,
+				UserCurrency: order.UserCurrency,
+				Address: &pb.Address{
+					StreetAddress: order.StreetAddress,
+					City: order.City,
+					State: order.State,
+					ZipCode: order.ZipCode,
+				},
+			})
+		}
+		return &pb.ListOrderResp{Orders: pbOrders}, nil
+	}
+
+	// redis中没有订单，从数据库中获取订单
 	var orders []model.Order
 	s.Db.Master.Where("user_id = ?", req.UserId).Find(&orders)
 	// 返回订单
@@ -137,6 +164,10 @@ func (s *OrderService) ListOrder(ctx context.Context, req *pb.ListOrderReq) (*pb
 			},
 		})
 	}
+
+	// 将订单存入Redis
+	bytes, _ := json.Marshal(orders)
+	s.Redis.Set(ctx, strconv.FormatUint(uint64(req.UserId), 10), bytes, 5*time.Minute)
 	return &pb.ListOrderResp{Orders: pbOrders}, nil
 }
 
@@ -149,6 +180,8 @@ func (s *OrderService) MarkOrderPaid(ctx context.Context, req *pb.MarkOrderPaidR
 	for _, order := range orders {
 		order.Paid = true
 		s.Db.Master.Save(&order)
+		// 删除缓存
+		s.Redis.Del(ctx, order.OrderId)
 	}
 	return nil, nil
 }

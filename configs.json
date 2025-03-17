@@ -5,7 +5,7 @@
             "port" : "3306",
             "user" : "root",
             "password" : "root",
-            "database" : "user"
+            "database" : "order"
         }
     ],
     "redis_config" : {
