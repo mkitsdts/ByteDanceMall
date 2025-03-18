@@ -8,11 +8,11 @@ import (
 var jwtKey = []byte("adgihioasxbfjkcbAEWIOFGHBIOHasegfWEAWEgWEARx")
 
 type Claims struct {
-	UserId int64 `json:"user_id"`
+	UserId uint32 `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(userId int64) (string, error) {
+func GenerateToken(userId uint32) (string, error) {
 	// 生成token
 	claims := Claims{
         userId,
@@ -30,7 +30,7 @@ func GenerateToken(userId int64) (string, error) {
 }
 
 func ParseToken(tokenstring string) (*Claims, error) {
-    t,err := jwt.ParseWithClaims(tokenstring, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+    t,err := jwt.ParseWithClaims(tokenstring, &Claims{}, func(token *jwt.Token) (any, error) {
         return jwtKey, nil
     })
 

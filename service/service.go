@@ -68,22 +68,22 @@ func (s *AuthService) VerifyTokenByRPC(ctx context.Context, req *pb.VerifyTokenR
 	// 从redis中获取token
 	userId, err := s.Redis.Get(ctx, req.Token).Result()
 	if err != nil {
-		return &pb.VerifyResp{Res: false}, err
+		return &pb.VerifyResp{Res: false, UserId: 0}, err
 	}
 	// 字符串转换成claims
 	claims, err := utils.ParseToken(req.Token)
 	if err != nil {
-		return &pb.VerifyResp{Res: false}, err
+		return &pb.VerifyResp{Res: false, UserId: 0}, err
 	}
-	// 字符串转换成int64
-	userIdInt, err := strconv.ParseInt(userId, 10, 64)
+	// 字符串转换成uing32
+	id, err := strconv.ParseUint(userId, 10, 32)
 	if err != nil {
 		// 系统错误
-		return &pb.VerifyResp{Res: false}, err
+		return &pb.VerifyResp{Res: false, UserId: uint32(id)}, err
 	}
 	// 验证token
-	if claims.UserId != userIdInt {
+	if claims.UserId != uint32(id) {
 		return &pb.VerifyResp{Res: false}, err
 	}
-	return &pb.VerifyResp{Res: true}, nil
+	return &pb.VerifyResp{Res: true,UserId: uint32(id)}, nil
 }
