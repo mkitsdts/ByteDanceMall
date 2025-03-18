@@ -50,7 +50,8 @@ func (r *RouterService) AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-
+		c.Set("userID", resp.UserId)
+		c.Next()
 	}
 }
 
@@ -131,32 +132,31 @@ func (r *RouterService) InitRouter() {
     // 商品相关路由
     productGroup := r.Router.Group("/products")
     {
-        productGroup.GET("/", HandleListProducts)
-        productGroup.GET("/:id", HandleGetProduct)
-        productGroup.GET("/search", HandleSearchProducts)
+        productGroup.GET("/", r.HandleListProducts)
+        productGroup.GET("/:id", r.HandleGetProduct)
+        productGroup.GET("/search", r.HandleSearchProducts)
     }
 
     // 购物车相关路由
     cartGroup := r.Router.Group("/cart", r.AuthMiddleware())
     {
-        cartGroup.GET("/", HandleGetCart)
-        cartGroup.POST("/items", HandleAddCartItem)
-        cartGroup.DELETE("/items/:id", HandleRemoveCartItem)
+        cartGroup.GET("/", r.HandleGetCart)
+        cartGroup.POST("/items", r.HandleAddCartItem)
+        cartGroup.DELETE("/items/:id", r.HandleRemoveCartItem)
     }
 
     // 订单相关路由
     orderGroup := r.Router.Group("/orders", r.AuthMiddleware())
     {
-        orderGroup.POST("", HandleCreateOrder)
-        orderGroup.GET("", HandleListOrders)
-        orderGroup.GET("/:id", HandleGetOrder)
+        orderGroup.POST("", r.HandleCreateOrder)
+        orderGroup.GET("", r.HandleListOrders)
+        //orderGroup.GET("/:id", r.HandleGetOrder)
     }
 
     // 支付相关路由
     paymentGroup := r.Router.Group("/payments", r.AuthMiddleware())
     {
-        paymentGroup.POST("", HandleCreatePayment)
-        paymentGroup.GET("/:id", HandleGetPaymentStatus)
+        paymentGroup.POST("", r.HandleCreatePayment)
     }
 }
 
