@@ -2,6 +2,7 @@ package main
 
 import (
 	pb "bytedancemall/order/proto"
+	"bytedancemall/order/raft"
 	"bytedancemall/order/service"
 	"fmt"
 	"net"
@@ -24,6 +25,9 @@ func main() {
 	// 创建并注册UserService
 	userService := service.NewOrderService()
 	pb.RegisterOrderServiceServer(s, userService)
+
+	raftnode := raft.InitRaftNode()
+	raftnode.Start(userService.LocalDb)
 
 	// 注册reflection服务，便于使用grpcurl等工具调试
 	reflection.Register(s)
