@@ -1,11 +1,5 @@
 package raft
 
-import (
-	"net/http"
-	"sync"
-	"time"
-)
-
 const (
 	FOLLOWER  uint8 = 0
 	CANDIDATE uint8 = 1
@@ -14,25 +8,24 @@ const (
 	TERM_MIN = 0
 
 	DEFAULTPORT = "11451"
+
+	LOG_PATH = "log.json"
 )
 
-type LogEntry struct {
-	Term    int    `json:"term"`
-	Command string `json:"command"` // 一个 sql 语句
+const (
+	MIN_DURATION = 100
+	MAX_DURATION = 200
+)
+
+type Command struct {
+	OpType string `json:"op_type"`
+	SQL    string `json:"sql"`
+	Value  []byte `json:"value"`
 }
 
-type RaftNode struct {
-	mux           sync.Mutex
-	state         uint8
-	Term          int    // 当前任期
-	VoteCount     uint16 // 获得的选票数
-	CommitIndex   int    // 已知的最大的已经被提交的日志条目的索引值
-	httpClient    http.Client
-	electionTimer *time.Timer
-	LocalIP       string   `json:"local_ip"`
-	NodeIP        []string `json:"node_ip"`
-	LeaderIP      string   `json:"leader_ip"`
-	Log           []LogEntry
+type LogEntry struct {
+	Term int     `json:"term"`
+	Comm Command `json:"command"` // 日志条目
 }
 
 type ElectionReq struct {
