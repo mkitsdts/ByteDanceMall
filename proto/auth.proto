@@ -9,6 +9,7 @@ option go_package="/auth";
 service AuthService {
     rpc DeliverTokenByRPC(DeliverTokenReq) returns (DeliveryResp) {}
     rpc VerifyTokenByRPC(VerifyTokenReq) returns (VerifyResp) {}
+    rpc ProlongTokenByRPC(ProlongTokenReq) returns (ProlongTokenReq) {}
 }
 
 message DeliverTokenReq {
@@ -24,6 +25,14 @@ message DeliveryResp {
 }
 
 message VerifyResp {
-    bool res = 1;
+    bool result = 1;
     uint32 user_id = 2;
+}
+
+message ProlongTokenReq {
+    uint32 user_id = 1;
+}
+
+message ProlongTokenResp {
+    bool result = 1;
 }

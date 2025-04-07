@@ -27,7 +27,7 @@ const (
 
 // AuthServiceClient is the client API for AuthService service.
 //
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+// For semantics around ctx use and closing/ending streaMIN_DURATIONg RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthServiceClient interface {
 	DeliverTokenByRPC(ctx context.Context, in *DeliverTokenReq, opts ...grpc.CallOption) (*DeliveryResp, error)
 	VerifyTokenByRPC(ctx context.Context, in *VerifyTokenReq, opts ...grpc.CallOption) (*VerifyResp, error)
