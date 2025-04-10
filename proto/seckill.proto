@@ -1,0 +1,33 @@
+// 秒杀模块的定义
+
+syntax = "proto3";
+
+package seckill;
+
+option go_package = '/seckill';
+
+service SeckillService {
+  rpc AddItem(AddItemReq) returns (AddItemResp) {}
+  rpc TrySecKillItem(TrySecKillItemReq) returns (TrySecKillItemResp) {}
+  //rpc IsSecKillSuccess(TrySecKillItemReq) returns (TrySecKillItemResp) {}
+}
+
+// 参数定义
+message AddItemReq {
+  uint32 product_id = 1;
+  uint32 quantity = 2;
+  string release_time = 3;
+}
+
+message AddItemResp {
+  bool result = 1;
+}
+
+message TrySecKillItemReq {
+  uint32 user_id = 1;
+  uint32 product_id = 2;
+}
+
+message TrySecKillItemResp {
+  int32 result = 1;
+}
