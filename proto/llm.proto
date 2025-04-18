@@ -1,0 +1,35 @@
+// 大模型定义
+
+syntax = "proto3";
+
+package llm;
+
+option go_package = "/llm";
+
+service LLMService {
+  rpc FilterKeyWord(FilterKeyWordReq) returns (FilterKeyWordResp) {}
+  rpc ChooseProduct(ChooseProductReq) returns (ChooseProductResp){}
+}
+
+message FilterKeyWordReq {
+  string keyword = 1;
+}
+
+message FilterKeyWordResp {
+  string result = 1;
+}
+
+message Product {
+  string Describe = 1;
+  string Name = 2;
+  uint32 quantity = 3;
+  uint32 id = 4;
+}
+
+message ChooseProductReq {
+  repeated Product product_info = 1;
+}
+
+message ChooseProductResp {
+  repeated uint32 product_id = 1;
+}
