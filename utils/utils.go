@@ -10,11 +10,11 @@ func ProductInfoToString(ProductInfo []*pb.Product) string {
 	res := ""
 	idx := 1
 	for range ProductInfo {
-		res += "商品" + string(idx) + ":\n"
+		res += "商品" + fmt.Sprint(idx) + ":\n"
 		res += "商品名称: " + ProductInfo[idx].Name + "\n"
 		res += "商品描述: " + ProductInfo[idx].Describe + "\n"
-		res += "商品数量: " + string(ProductInfo[idx].Quantity) + "\n"
-		res += "商品id: " + string(ProductInfo[idx].Id) + "\n"
+		res += "商品数量: " + fmt.Sprint(ProductInfo[idx].Quantity) + "\n"
+		res += "商品id: " + fmt.Sprint(ProductInfo[idx].Id) + "\n"
 		res += "\n"
 		idx++
 	}
@@ -24,8 +24,8 @@ func ProductInfoToString(ProductInfo []*pb.Product) string {
 func StringParseToUID(str string) []uint32 {
 	res := make([]uint32, 0)
 	// string一行一个uint32整数
-	lines := strings.Split(str, "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(str, "\n")
+	for line := range lines {
 		if line == "" {
 			continue
 		}

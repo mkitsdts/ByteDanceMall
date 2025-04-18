@@ -6,6 +6,6 @@ import (
 )
 
 type LLMService struct {
-	Model *cllm.ModelService `json:"model"`
+	Model *cllm.ModelService
 	pb.UnimplementedLLMServiceServer
 }
