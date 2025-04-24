@@ -11,19 +11,20 @@ func main() {
 	productId := 1
 	// quantity := 10
 	// releaseTime := "2025-4-10 9:35:00"
-	// body := fmt.Sprintf(`{"product_id": %d, "quantity": %d, "release_time": %s}`, productId, quantity, releaseTime)
-	// req, err := http.NewRequest("POST", "http://192.168.2.169:8080/seckill", strings.NewReader(body))
+	// body := fmt.Sprintf(`{"product_id": %d, "quantity": %d, "release_time": "%s"}`, productId, quantity, releaseTime)
+	// fmt.Println("body", body)
+	// req, err := http.NewRequest("POST", "http://192.168.2.169:8075/seckill/add", strings.NewReader(body))
 	// if err != nil {
 	// 	panic(err)
 	// }
 	// req.Header.Set("Content-Type", "application/json")
-	// client := &http.Client{}
-	// resp, err := client.Do(req)
+	// cli := &http.Client{}
+	// resp, err := cli.Do(req)
 	// if err != nil {
 	// 	panic(err)
 	// }
 	// defer resp.Body.Close()
-	// fmt.Printf("Error: %s\n", resp.Status)
+	// fmt.Printf("Status: %s\n", resp.Status)
 	// time.Sleep(2 * time.Second)
 	// 发送请求
 	for range 100 {
@@ -33,7 +34,7 @@ func main() {
 				// 这里可以使用 http.NewRequest 来设置请求头等
 				// 也可以使用 http.Post 来简化请求
 				reqBody := fmt.Sprintf(`{"product_id": %d, "user_id": %d}`, productId, j)
-				reqSec, err := http.NewRequest("POST", "http://192.168.2.169:8080/seckill/tryseckill", strings.NewReader(reqBody))
+				reqSec, err := http.NewRequest("POST", "http://192.168.2.169:8075/seckill/tryseckill", strings.NewReader(reqBody))
 				if err != nil {
 					panic(err)
 				}

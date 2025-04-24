@@ -11,9 +11,9 @@ func main() {
 	s := service.NewSeckillService()
 	fmt.Println("Seckill service started...")
 	// 启动 http 服务
-	http.HandleFunc("/seckill", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/seckill/add", func(w http.ResponseWriter, r *http.Request) {
 		type Request struct {
-			ProductId   uint32  `json:"product_id"`
+			ProductId   uint32 `json:"product_id"`
 			Quantity    uint32 `json:"quantity"`
 			ReleaseTime string `json:"release_time"`
 		}
@@ -22,7 +22,7 @@ func main() {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		s.AddItemHandler(r.Context(), req.ProductId, req.Quantity,req.ReleaseTime)
+		s.AddItemHandler(r.Context(), req.ProductId, req.Quantity, req.ReleaseTime)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
@@ -47,5 +47,8 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 	})
-	http.ListenAndServe(":8080", nil)
+	if err := http.ListenAndServe(":8075", nil); err != nil {
+		fmt.Println("Error starting server:", err)
+		return
+	}
 }

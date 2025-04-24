@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/segmentio/kafka-go"
 )
 
 func NewSeckillService() *SeckillSer {
@@ -25,12 +27,6 @@ func NewSeckillService() *SeckillSer {
 		panic("Failed to decode config file: " + err.Error())
 	}
 
-	// 连接 Redis
-	// SeckillService.RedisCluster = redis.NewClusterClient(&redis.ClusterOptions{
-	// 	Addrs: config.RedisConfig.Host,
-	// 	Password: config.RedisConfig.Pass,
-	// 	PoolSize: 10,
-	// })
 	SeckillService.RedisCluster = redis.NewClient(&redis.Options{
 		Addr:     config.RedisConfig.Host[0],
 		Password: config.RedisConfig.Pass,
@@ -43,5 +39,21 @@ func NewSeckillService() *SeckillSer {
 		panic("Failed to ping Redis: " + err.Error())
 	}
 	fmt.Println("Redis connected successfully")
+
+	SeckillService.KafkaProducer = kafka.NewWriter(kafka.WriterConfig{
+		Brokers:      config.KafkaConfig.Brokers,
+		Topic:        config.KafkaConfig.Topic,
+		Balancer:     &kafka.Hash{},
+		WriteTimeout: 1 * time.Second,
+	})
+	// 测试 Kafka 连接
+	err = SeckillService.KafkaProducer.WriteMessages(context.Background(), kafka.Message{
+		Key:   []byte("test"),
+		Value: []byte("test"),
+	})
+	if err != nil {
+		panic("Failed to write message to Kafka: " + err.Error())
+	}
+	fmt.Println("Kafka connected successfully")
 	return SeckillService
 }
