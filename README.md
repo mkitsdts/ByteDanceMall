@@ -1,5 +1,7 @@
 # 用户服务
 
+## 需求分析
+
 需要实现的功能如下
 
 - 创建用户
@@ -14,10 +16,12 @@
 - 创建用户
 - 登录
 
-接口设计
+## 接口设计
 
 - 创建  rpc Register(RegisterReq) returns (RegisterResp) {}
 - 登录  rpc Login(LoginReq) returns (LoginResp) {}
+
+### 接口参数及返回值
 
 RegisterReq {
     string email;
@@ -26,7 +30,7 @@ RegisterReq {
 }
 
 RegisterResp {
-    int64 user_id;
+    uint32 user_id;
 }
 
 LoginReq {
@@ -35,5 +39,5 @@ LoginReq {
 }
 
 LoginResp {
-    int64 user_id;
+    uint32 user_id;
 }

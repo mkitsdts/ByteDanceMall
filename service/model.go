@@ -1,9 +1,9 @@
-package model
+package service
 
 type MysqlConfig struct {
-	Host string `json:"host"`
-	Port string `json:"port"`
-	User string `json:"user"`
+	Host     string `json:"host"`
+	Port     string `json:"port"`
+	User     string `json:"user"`
 	Password string `json:"password"`
 	Database string `json:"database"`
 }
@@ -18,24 +18,24 @@ type RedisConfig struct {
 }
 
 type RedisConfigs struct {
-	Configs []RedisConfig `json:"configs"`
-	Password string `json:"password"`
+	Configs  []RedisConfig `json:"configs"`
+	Password string        `json:"password"`
 }
 
 type AuthServerConfig struct {
-	Address string `json:"address"`
+	Address         string `json:"address"`
 	DefaultUsername string `json:"default_username"`
 }
 
 type Configs struct {
-	MysqlConfig MysqlConfigs `json:"sql_config"`
-	RedisConfig RedisConfigs `json:"redis_config"`
+	MysqlConfig      MysqlConfigs     `json:"sql_config"`
+	RedisConfig      RedisConfigs     `json:"redis_config"`
 	AuthServerConfig AuthServerConfig `json:"auth_server_config"`
 }
 
 type User struct {
-	Id int64 `json:"id" gorm:"primary_key"`
+	Id       int64  `json:"id" gorm:"primary_key"`
 	Username string `json:"username"`
-	Email string `json:"email"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
