@@ -14,7 +14,6 @@ service UserService {
 message RegisterReq {
     string email = 1;
     string password = 2;
-    string confirm_password = 3;
 }
 
 message RegisterResp {
@@ -27,5 +26,6 @@ message LoginReq {
 }
 
 message LoginResp {
-    int64 user_id = 1;
+    bool result = 1;
+    string token = 2;
 }
