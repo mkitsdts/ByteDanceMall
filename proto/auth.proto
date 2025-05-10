@@ -9,7 +9,7 @@ option go_package="/auth";
 service AuthService {
     rpc DeliverTokenByRPC(DeliverTokenReq) returns (DeliveryResp) {}
     rpc VerifyTokenByRPC(VerifyTokenReq) returns (VerifyResp) {}
-    rpc ProlongTokenByRPC(ProlongTokenReq) returns (ProlongTokenReq) {}
+    rpc ProlongTokenByRPC(ProlongTokenReq) returns (ProlongTokenResp) {}
 }
 
 message DeliverTokenReq {

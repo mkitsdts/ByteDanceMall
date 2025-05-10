@@ -314,11 +314,11 @@ const file_auth_proto_rawDesc = "" +
 	"\x0fProlongTokenReq\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\rR\x06userId\"*\n" +
 	"\x10ProlongTokenResp\x12\x16\n" +
-	"\x06result\x18\x01 \x01(\bR\x06result2\xd2\x01\n" +
+	"\x06result\x18\x01 \x01(\bR\x06result2\xd3\x01\n" +
 	"\vAuthService\x12@\n" +
 	"\x11DeliverTokenByRPC\x12\x15.auth.DeliverTokenReq\x1a\x12.auth.DeliveryResp\"\x00\x12<\n" +
-	"\x10VerifyTokenByRPC\x12\x14.auth.VerifyTokenReq\x1a\x10.auth.VerifyResp\"\x00\x12C\n" +
-	"\x11ProlongTokenByRPC\x12\x15.auth.ProlongTokenReq\x1a\x15.auth.ProlongTokenReq\"\x00B\aZ\x05/authb\x06proto3"
+	"\x10VerifyTokenByRPC\x12\x14.auth.VerifyTokenReq\x1a\x10.auth.VerifyResp\"\x00\x12D\n" +
+	"\x11ProlongTokenByRPC\x12\x15.auth.ProlongTokenReq\x1a\x16.auth.ProlongTokenResp\"\x00B\aZ\x05/authb\x06proto3"
 
 var (
 	file_auth_proto_rawDescOnce sync.Once
@@ -347,7 +347,7 @@ var file_auth_proto_depIdxs = []int32{
 	4, // 2: auth.AuthService.ProlongTokenByRPC:input_type -> auth.ProlongTokenReq
 	2, // 3: auth.AuthService.DeliverTokenByRPC:output_type -> auth.DeliveryResp
 	3, // 4: auth.AuthService.VerifyTokenByRPC:output_type -> auth.VerifyResp
-	4, // 5: auth.AuthService.ProlongTokenByRPC:output_type -> auth.ProlongTokenReq
+	5, // 5: auth.AuthService.ProlongTokenByRPC:output_type -> auth.ProlongTokenResp
 	3, // [3:6] is the sub-list for method output_type
 	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
