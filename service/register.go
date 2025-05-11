@@ -47,7 +47,7 @@ func (s *UserService) Register(ctx context.Context, req *pb.RegisterReq) (*pb.Re
 	}
 
 	// 开启主库事务
-	tx := s.Db.Cluster[s.Db.masterIdx].Begin()
+	tx := s.Db.Client.Begin()
 	if tx.Error != nil {
 		return nil, status.Errorf(codes.Internal, "database error: %v", tx.Error)
 	}
