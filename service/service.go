@@ -2,10 +2,11 @@ package service
 
 import (
 	pb "bytedancemall/payment/proto"
+	"bytedancemall/payment/utils"
 	"context"
 	"fmt"
+
 	"github.com/google/uuid"
-	"bytedancemall/payment/utils"
 )
 
 type PaymentService struct {
@@ -37,5 +38,4 @@ func (s *PaymentService) Charge(ctx context.Context, in *pb.ChargeReq) (*pb.Char
 			TransactionId: "ERROR",
 		}, fmt.Errorf("Charge failed")
 	}
-
 }
