@@ -10,6 +10,9 @@ service ProductCatalogService {
   rpc ListProducts(ListProductsReq) returns (ListProductsResp) {}
   rpc GetProduct(GetProductReq) returns (GetProductResp) {}
   rpc SearchProducts(SearchProductsReq) returns (SearchProductsResp) {}
+  rpc CreateProduct(CreateProductReq) returns (CreateProductResp) {}
+  rpc UpdateProduct(UpdateProductReq) returns (UpdateProductResp) {}
+  rpc DeleteProduct(DeleteProductReq) returns (DeleteProductResp) {}
 }
 
 message ListProductsReq{
@@ -45,4 +48,28 @@ message SearchProductsReq {
 
 message SearchProductsResp {
   repeated Product results = 1;
+}
+
+message CreateProductReq {
+
+}
+
+message CreateProductResp {
+
+}
+
+message UpdateProductReq {
+
+}
+
+message UpdateProductResp {
+
+}
+
+message DeleteProductReq {
+
+}
+
+message DeleteProductResp {
+  
 }

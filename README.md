@@ -18,14 +18,11 @@
 - 查询商品信息  rpc ListProducts(ListProductsReq) returns (ListProductsResp) {}
 - 查询单个商品  rpc GetProduct(GetProductReq) returns (GetProductResp) {}
 - 查询批量商品  rpc SearchProducts(SearchProductsReq) returns (SearchProductsResp) {}
+- 创建单个商品  rpc CreateProduct(CreateProductReq) returns (CreateProductResp) {}
+- 修改商品信息  rpc UpdateProduct(UpdateProductReq) returns (UpdateProductResp) {}
+- 删除已有商品  rpc DeleteProduct(DeleteProductReq) returns (DeleteProductResp) {}
 
 ### 接口参数及返回值
-
-ListProductsReq{
-  int32 page;
-  int64 pageSize;
-  string categoryName;
-}
 
 Product {
   uint32 id;
@@ -34,6 +31,13 @@ Product {
   string picture;
   float price;
   repeated string categories;
+  uint32 count;
+}
+
+ListProductsReq{
+  int32 page;
+  int64 pageSize;
+  string categoryName;
 }
 
 ListProductsResp {

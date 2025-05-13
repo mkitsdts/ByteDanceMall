@@ -1,13 +1,13 @@
 package service
 
 import (
-	"bytedancemall/product/model"
 	pb "bytedancemall/product/proto"
 	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"time"
+
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -15,13 +15,13 @@ import (
 
 type Database struct {
 	Master *gorm.DB
-	Slaves  []*gorm.DB
+	Slaves []*gorm.DB
 }
 
 type ProductService struct {
-    Db Database
+	Db    Database
 	Redis *redis.ClusterClient
-    pb.UnimplementedProductCatalogServiceServer
+	pb.UnimplementedProductCatalogServiceServer
 }
 
 func initUserService() (Database, *redis.ClusterClient) {
@@ -33,12 +33,12 @@ func initUserService() (Database, *redis.ClusterClient) {
 	}
 	defer file.Close()
 	decoder := json.NewDecoder(file)
-	configs := model.Configs{}
+	configs := Configs{}
 	err = decoder.Decode(&configs)
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// 生成mysql的dsn
 	masterDsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		configs.MysqlConfig.Configs[0].User,
@@ -54,7 +54,7 @@ func initUserService() (Database, *redis.ClusterClient) {
 	if err != nil {
 		panic(err)
 	}
-	db.Master.AutoMigrate(&model.Product{})
+	db.Master.AutoMigrate(&Product{})
 	for i := 1; i < len(configs.MysqlConfig.Configs); i++ {
 		slaveDsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 			configs.MysqlConfig.Configs[i].User,
@@ -67,18 +67,18 @@ func initUserService() (Database, *redis.ClusterClient) {
 		if err != nil {
 			panic(err)
 		}
-		slave.AutoMigrate(&model.Product{})
-		db.Slaves = append(db.Slaves,slave)
+		slave.AutoMigrate(&Product{})
+		db.Slaves = append(db.Slaves, slave)
 	}
 
 	// 生成redis集群的地址
 	var redisAddrs []string
 	for _, v := range configs.RedisConfig.Configs {
-		redisAddrs = append(redisAddrs, v.Host + ":" + v.Port)
+		redisAddrs = append(redisAddrs, v.Host+":"+v.Port)
 	}
 	// 初始化redis
 	redis := redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs: redisAddrs,
+		Addrs:    redisAddrs,
 		Password: configs.RedisConfig.Password,
 	})
 
@@ -97,7 +97,7 @@ func (s *ProductService) ListProducts(ctx context.Context, req *pb.ListProductsR
 	// 计算偏移量
 	offset := ((int64(req.Page)) - 1) * req.PageSize
 	// 从数据库中获取商品
-	var products []model.Product
+	var products []Product
 	result := s.Db.Master.Limit(int(req.PageSize)).Offset(int(offset)).Find(&products)
 	if result.Error != nil {
 		return nil, result.Error
@@ -120,7 +120,7 @@ func (s *ProductService) ListProducts(ctx context.Context, req *pb.ListProductsR
 
 // 获取单个产品
 func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReq) (*pb.GetProductResp, error) {
-	var product model.Product
+	var product Product
 	result := s.Db.Master.First(&product, req.Id)
 	if result.Error != nil {
 		return nil, result.Error
@@ -137,53 +137,53 @@ func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReq) 
 
 func (s *ProductService) ListProSearchProductsducts(ctx context.Context, req *pb.SearchProductsReq) (*pb.SearchProductsResp, error) {
 	// 参数验证
-    if req.Query == "" {
-        return &pb.SearchProductsResp{Results: []*pb.Product{}}, nil
-    }
-    
-    // 尝试从缓存获取结果
-    cacheKey := fmt.Sprintf("product:search:%s", req.Query)
-    cachedData, err := s.Redis.Get(ctx, cacheKey).Bytes()
-    if err == nil {
-        // 缓存命中
-        var products []*pb.Product
-        if err := json.Unmarshal(cachedData, &products); err == nil {
-            return &pb.SearchProductsResp{Results: products}, nil
-        }
-    }
-    
-    // 缓存未命中，从数据库查询
-    var products []model.Product
-    
-    // 限制返回的最大记录数，避免返回过多数据
-    const maxResults = 100
-    
-    result := s.Db.Master.Where("name LIKE ?", "%"+req.Query+"%").Limit(maxResults).Find(&products)
-    
-    if result.Error != nil {
-        return nil, result.Error
-    }
-    
-    // 将商品转换为proto格式
-    var respProducts []*pb.Product
-    for _, v := range products {
-        respProducts = append(respProducts, &pb.Product{
-            Id:          v.ID,
-            Name:        v.Name,
-            Description: v.Description,
-            Price:       v.Price,
-        })
-    }
-    
-    // 将结果缓存到Redis，设置过期时间为5分钟
-    if len(respProducts) > 0 {
-        cacheData, err := json.Marshal(respProducts)
-        if err == nil {
-            s.Redis.Set(ctx, cacheKey, cacheData, 5*time.Minute)
-        }
-    }
-    
-    return &pb.SearchProductsResp{
-        Results: respProducts,
-    }, nil
+	if req.Query == "" {
+		return &pb.SearchProductsResp{Results: []*pb.Product{}}, nil
+	}
+
+	// 尝试从缓存获取结果
+	cacheKey := fmt.Sprintf("product:search:%s", req.Query)
+	cachedData, err := s.Redis.Get(ctx, cacheKey).Bytes()
+	if err == nil {
+		// 缓存命中
+		var products []*pb.Product
+		if err := json.Unmarshal(cachedData, &products); err == nil {
+			return &pb.SearchProductsResp{Results: products}, nil
+		}
+	}
+
+	// 缓存未命中，从数据库查询
+	var products []Product
+
+	// 限制返回的最大记录数，避免返回过多数据
+	const maxResults = 100
+
+	result := s.Db.Master.Where("name LIKE ?", "%"+req.Query+"%").Limit(maxResults).Find(&products)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	// 将商品转换为proto格式
+	var respProducts []*pb.Product
+	for _, v := range products {
+		respProducts = append(respProducts, &pb.Product{
+			Id:          v.ID,
+			Name:        v.Name,
+			Description: v.Description,
+			Price:       v.Price,
+		})
+	}
+
+	// 将结果缓存到Redis，设置过期时间为5分钟
+	if len(respProducts) > 0 {
+		cacheData, err := json.Marshal(respProducts)
+		if err == nil {
+			s.Redis.Set(ctx, cacheKey, cacheData, 5*time.Minute)
+		}
+	}
+
+	return &pb.SearchProductsResp{
+		Results: respProducts,
+	}, nil
 }
