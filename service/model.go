@@ -6,8 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
-	"time"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
@@ -50,22 +50,13 @@ func NewSeckillService() *SeckillSer {
 	if err != nil {
 		panic("Failed to ping Redis: " + err.Error())
 	}
-	fmt.Println("Redis connected successfully")
-
-	SeckillService.KafkaProducer = kafka.NewWriter(kafka.WriterConfig{
-		Brokers:      config.KafkaConfig.Brokers,
-		Topic:        config.KafkaConfig.Topic,
-		Balancer:     &kafka.Hash{},
-		WriteTimeout: 1 * time.Second,
-	})
-	// 测试 Kafka 连接
-	err = SeckillService.KafkaProducer.WriteMessages(context.Background(), kafka.Message{
-		Key:   []byte("test"),
-		Value: []byte("test"),
-	})
-	if err != nil {
-		panic("Failed to write message to Kafka: " + err.Error())
+	slog.Debug("Kafka ", "host", config.KafkaConfig.Brokers[0], "topic", config.KafkaConfig.Topic)
+	// 初始化 Kafka 生产者
+	SeckillService.KafkaProducer = &kafka.Writer{
+		Addr:                   kafka.TCP(config.KafkaConfig.Brokers[0]),
+		Topic:                  config.KafkaConfig.Topic,
+		AllowAutoTopicCreation: true,
 	}
-	fmt.Println("Kafka connected successfully")
+	fmt.Println("Init success")
 	return SeckillService
 }

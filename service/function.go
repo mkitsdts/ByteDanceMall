@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -13,11 +12,13 @@ import (
 )
 
 func (s *SeckillSer) AsyncEnsureRedisSet(key string, value any) {
-	MAX := 100
+	MAX := 10
+	gid := getGid()
+	slog.Info("AsyncEnsureRedisSet", "key", key, "value", value, "goroutineId", gid)
 	for i := range MAX {
 		result := s.RedisCluster.Set(context.Background(), key, value, 0).Err()
 		if result == nil {
-			fmt.Println("Redis set success")
+			slog.Info("Redis set success", "key", key, "value", value, "goroutineId", gid)
 			return
 		}
 		fmt.Println("Redis set failed, retrying...")
@@ -25,15 +26,17 @@ func (s *SeckillSer) AsyncEnsureRedisSet(key string, value any) {
 		duration := time.Duration(1<<i) * time.Millisecond
 		time.Sleep(duration)
 	}
-	slog.Error("Redis set failed after retries", "key", key, "value", value)
+	slog.Error("Redis set failed after retries", "key", key, "value", value, "goroutineId", gid)
 }
 
 func (s *SeckillSer) AsyncEnsureRedisZAdd(key string, value redis.Z) {
-	MAX := 100
+	MAX := 10
+	gid := getGid()
+	slog.Info("AsyncEnsureRedisZAdd", "key", key, "value", value, "goroutineId", gid)
 	for i := range MAX {
-		result := s.RedisCluster.Set(context.Background(), key, value, 0).Err()
+		result := s.RedisCluster.ZAdd(context.Background(), key, value).Err()
 		if result == nil {
-			fmt.Println("Redis set success")
+			fmt.Println("Redis set success", "goroutineId", gid)
 			return
 		}
 		fmt.Println("Redis set failed, retrying...")
@@ -41,7 +44,7 @@ func (s *SeckillSer) AsyncEnsureRedisZAdd(key string, value redis.Z) {
 		duration := time.Duration(1<<i) * time.Millisecond
 		time.Sleep(duration)
 	}
-	slog.Error("Redis set failed after retries", "key", key, "value", value)
+	slog.Error("Redis set failed after retries", "key", key, "value", value, "goroutineId", gid)
 }
 
 func (s *SeckillSer) AddItemHandler(ctx context.Context, ProductId uint32, Quantity uint32, ReleaseTime string) {
@@ -76,30 +79,30 @@ func (s *SeckillSer) AddItemHandler(ctx context.Context, ProductId uint32, Quant
 // 秒杀商品
 func (s *SeckillSer) TrySecKillItemHandler(ctx context.Context, ProductId uint32, UserId uint32) error {
 	// 检查秒杀是否已开始
-	releaseTimeKey := fmt.Sprintf("seckill:releasetime:%d", ProductId)
+	// releaseTimeKey := fmt.Sprintf("seckill:releasetime:%d", ProductId)
 
-	maxRetry := 3
-	var releaseTimeStr string
-	var err error
-	for i := range maxRetry {
-		releaseTimeStr, err = s.RedisCluster.Get(ctx, releaseTimeKey).Result()
-		if err == nil {
-			break
-		}
-		if err == redis.Nil {
-			return fmt.Errorf("no such product: %d", ProductId)
-		}
-		// 如果Redis中没有数据，可能是因为数据还未设置，稍等一会儿再试
-		fmt.Println("Redis key not found, retrying...")
-		time.Sleep(time.Duration(1<<i) * time.Millisecond)
-	}
+	// maxRetry := 3
+	// var releaseTimeStr string
+	// var err error
+	// for i := range maxRetry {
+	// 	releaseTimeStr, err = s.RedisCluster.Get(ctx, releaseTimeKey).Result()
+	// 	if err == nil {
+	// 		break
+	// 	}
+	// 	if err == redis.Nil {
+	// 		return fmt.Errorf("no such product: %d", ProductId)
+	// 	}
+	// 	// 如果Redis中没有数据，可能是因为数据还未设置，稍等一会儿再试
+	// 	fmt.Println("Redis key not found, retrying...")
+	// 	time.Sleep(time.Duration(1<<i) * time.Millisecond)
+	// }
 
-	releaseTime, _ := strconv.ParseInt(releaseTimeStr, 10, 64)
-	now := time.Now().Unix()
+	// releaseTime, _ := strconv.ParseInt(releaseTimeStr, 10, 64)
+	// now := time.Now().Unix()
 
-	if now < releaseTime {
-		return fmt.Errorf("秒杀未开始")
-	}
+	// if now < releaseTime {
+	// 	// return fmt.Errorf("秒杀未开始")
+	// }
 
 	// 秒杀逻辑 - 使用Lua脚本保证原子性
 	stockKey := fmt.Sprintf("seckill:stock:%d", ProductId)
@@ -127,13 +130,7 @@ func (s *SeckillSer) TrySecKillItemHandler(ctx context.Context, ProductId uint32
 	}
 
 	fmt.Println("放入队列")
-	// 将请求放入MQ中
-	queueKey := fmt.Sprintf("seckill:queue:%d", ProductId)
-	err = s.KafkaProducer.WriteMessages(ctx, kafka.Message{
-		Key:   fmt.Appendf(nil, "%s", queueKey),
-		Value: fmt.Appendf(nil, "%d", UserId),
-	})
-
+	err = s.AsyncEnsureKafkaAdd(ctx, ProductId, UserId)
 	if err != nil {
 		// 记录错误
 		slog.Error("添加到队列失败", "error", err, "productId", ProductId, "userId", UserId)
@@ -143,5 +140,15 @@ func (s *SeckillSer) TrySecKillItemHandler(ctx context.Context, ProductId uint32
 		s.RedisCluster.SRem(ctx, orderKey, UserId)
 		return fmt.Errorf("添加到队列失败: %w", err)
 	}
+
 	return nil
+}
+
+func (s *SeckillSer) AsyncEnsureKafkaAdd(ctx context.Context, ProductId uint32, UserId uint32) error {
+	// 将请求放入MQ中
+	message := kafka.Message{
+		Key:   fmt.Appendf(nil, "seckill_queue_%d", ProductId),
+		Value: fmt.Appendf(nil, "%d", UserId),
+	}
+	return s.KafkaProducer.WriteMessages(ctx, message)
 }

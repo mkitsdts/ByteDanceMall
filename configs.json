@@ -4,5 +4,11 @@
             "localhost:6379"
         ],
         "pass": null
+    },
+    "kafka_config": {
+        "brokers": [
+            "localhost:9092"
+        ],
+        "topic": "seckill"
     }
 }

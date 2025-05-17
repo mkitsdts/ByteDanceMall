@@ -4,6 +4,7 @@ import (
 	"bytedancemall/seckill/service"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 )
 
@@ -22,10 +23,12 @@ func main() {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		slog.Info("add item", "productId", req.ProductId, "quantity", req.Quantity, "releaseTime", req.ReleaseTime)
 		s.AddItemHandler(r.Context(), req.ProductId, req.Quantity, req.ReleaseTime)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+		slog.Info("add item success", "productId", req.ProductId, "quantity", req.Quantity, "releaseTime", req.ReleaseTime)
 	})
 	http.HandleFunc("/seckill/tryseckill", func(w http.ResponseWriter, r *http.Request) {
 		type Request struct {
@@ -38,6 +41,7 @@ func main() {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		slog.Info("try seckill", "productId", req.ProductId, "userId", req.UserId)
 		if err := s.TrySecKillItemHandler(r.Context(), req.ProductId, req.UserId); err != nil {
 			fmt.Println("Error processing request:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -46,6 +50,7 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+		slog.Info("try seckill success", "productId", req.ProductId, "userId", req.UserId)
 	})
 	if err := http.ListenAndServe(":8075", nil); err != nil {
 		fmt.Println("Error starting server:", err)
