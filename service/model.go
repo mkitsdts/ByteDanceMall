@@ -1,41 +1,29 @@
 package service
 
-type MysqlConfig struct {
-	Host     string `json:"host"`
-	Port     string `json:"port"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Database string `json:"database"`
-}
-
-type MysqlConfigs struct {
-	Configs []MysqlConfig `json:"configs"`
-}
-
-type RedisConfig struct {
-	Host string `json:"host"`
-	Port string `json:"port"`
-}
-
-type RedisConfigs struct {
-	Configs  []RedisConfig `json:"configs"`
-	Password string        `json:"password"`
-}
-
-type AuthServerConfig struct {
-	Address         string `json:"address"`
-	DefaultUsername string `json:"default_username"`
-}
-
-type Configs struct {
-	MysqlConfig      MysqlConfigs     `json:"sql_config"`
-	RedisConfig      RedisConfigs     `json:"redis_config"`
-	AuthServerConfig AuthServerConfig `json:"auth_server_config"`
-}
+import "time"
 
 type User struct {
-	Id       int64  `json:"id" gorm:"primary_key"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Id         int64     `json:"id" gorm:"primary_key"`
+	Username   string    `json:"username"`
+	Email      string    `json:"email"`
+	Password   string    `json:"password" gorm:"varchar(255),not null"`
+	CreatedAt  time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt  time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+	Status     int8      `json:"status" gorm:"default:0"`
+	SettingsId int64     `json:"settings_id" gorm:"default:0"`
+}
+
+type Register struct {
+	Id        int64     `json:"id" gorm:"primary_key"`
+	Username  string    `json:"username" gorm:"varchar(255)"`
+	Email     string    `json:"email" gorm:"varchar(255)"`
+	Password  string    `json:"password" gorm:"varchar(255),not null"`
+	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+	Status    int8      `json:"status" gorm:"default:0"`
+}
+
+type UserSettings struct {
+	Id     int64 `json:"id" gorm:"primary_key"`
+	UserId int64 `json:"user_id" gorm:"index"`
 }

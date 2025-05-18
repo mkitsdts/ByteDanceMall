@@ -40,6 +40,11 @@ func (db *Database) InitDatabase(configs []MysqlConfig) error {
 		return fmt.Errorf("failed to connect to master database: %w", err)
 	}
 
+	err = db.Client.AutoMigrate(&User{}, &Register{}, &UserSettings{})
+	if err != nil {
+		return fmt.Errorf("failed to auto migrate: %w", err)
+	}
+
 	// 如果只有一个数据库配置，不需要使用DBResolver
 	if len(configs) == 1 {
 		return nil

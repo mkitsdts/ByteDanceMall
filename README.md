@@ -16,6 +16,12 @@
 - 创建用户
 - 登录
 
+数据库表设计
+
+注册用户
+
+
+
 ## 接口设计
 
 - 创建  rpc Register(RegisterReq) returns (RegisterResp) {}

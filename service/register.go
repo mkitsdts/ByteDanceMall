@@ -62,14 +62,14 @@ func (s *UserService) Register(ctx context.Context, req *pb.RegisterReq) (*pb.Re
 
 	// 创建新用户
 	userId := utils.GenerateId()
-	user := User{
+	register := Register{
 		Id:       userId,
 		Username: uuid.New().String(),
 		Email:    req.Email,
 		Password: utils.EncryptPassword(req.Password),
 	}
 
-	if result := tx.Create(&user); result.Error != nil {
+	if result := tx.Create(&register); result.Error != nil {
 		return nil, status.Errorf(codes.Internal, "database error: %v", result.Error)
 	}
 
@@ -80,14 +80,14 @@ func (s *UserService) Register(ctx context.Context, req *pb.RegisterReq) (*pb.Re
 	committed = true
 
 	// 更新Redis缓存并确保写入成功
-	if err := s.ensureRedisUpdate(user.Email, user.Id); err != nil {
+	if err := s.ensureRedisUpdate(register.Email, register.Id); err != nil {
 		// Redis操作失败是严重问题，记录日志，但仍向客户端返回结果
 		// 也可以选择启动一个异步任务继续尝试写入Redis
 		log.Printf("Critical: Failed to update Redis after %d retries: %v", maxRedisRetries, err)
-		go s.asyncEnsureRedisUpdate(user.Email, user.Id)
+		go s.asyncEnsureRedisUpdate(register.Email, register.Id)
 	}
 
-	return &pb.RegisterResp{UserId: user.Id}, nil
+	return &pb.RegisterResp{UserId: register.Id}, nil
 }
 
 // 确保数据写入Redis成功
