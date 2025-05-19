@@ -1,11 +1,11 @@
 package service
 
-import (
-	"bytedancemall/llm/cllm"
-	pb "bytedancemall/llm/proto"
-)
+type ModelConfig struct {
+	Name string `json:"name"`
+	Host string `json:"host"`
+	Key  string `json:"key"`
+}
 
-type LLMService struct {
-	Model *cllm.ModelService
-	pb.UnimplementedLLMServiceServer
+type Config struct {
+	Model ModelConfig `json:"model"`
 }

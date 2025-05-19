@@ -7,16 +7,16 @@ package llm;
 option go_package = "/llm";
 
 service LLMService {
-  rpc FilterKeyWord(FilterKeyWordReq) returns (FilterKeyWordResp) {}
-  rpc ChooseProduct(ChooseProductReq) returns (ChooseProductResp){}
+  rpc Chat(ChatReq) returns (AnswerResp) {}
 }
 
-message FilterKeyWordReq {
+message ChatReq {
   string keyword = 1;
 }
 
-message FilterKeyWordResp {
-  string result = 1;
+message AnswerResp {
+  int8 result = 1;
+  Product product = 2;
 }
 
 message Product {
@@ -24,12 +24,4 @@ message Product {
   string Name = 2;
   uint32 quantity = 3;
   uint32 id = 4;
-}
-
-message ChooseProductReq {
-  repeated Product product_info = 1;
-}
-
-message ChooseProductResp {
-  repeated uint32 product_id = 1;
 }
