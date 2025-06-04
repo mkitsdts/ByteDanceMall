@@ -1,0 +1,134 @@
+networks:
+  seckill-net:
+    driver: bridge
+
+services:
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    networks:
+      - seckill-net
+    ports:
+      - "9092:9092"
+      - "9093:9093" # 控制器端口
+    environment:
+      # 同时作为broker和controller
+      KAFKA_PROCESS_ROLES: 'broker,controller' 
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
+      # 添加CONTROLLER监听器
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      # 设置集群ID
+      KAFKA_CLUSTER_ID: '5L6g3nShT-eMCtK--X86sw'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  redis-node-1:
+    image: redis:latest # 您可以选择一个具体的版本
+    container_name: redis-node-1
+    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+    networks:
+      - seckill-net
+    ports:
+      - "7001:6379"
+
+  redis-node-2:
+    image: redis:latest
+    container_name: redis-node-2
+    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+    networks:
+      - seckill-net
+    ports:
+      - "7002:6379"
+
+  redis-node-3:
+    image: redis:latest
+    container_name: redis-node-3
+    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+    networks:
+      - seckill-net
+    ports:
+      - "7003:6379"
+
+  redis-node-4:
+    image: redis:latest
+    container_name: redis-node-4
+    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+    networks:
+      - seckill-net
+    ports:
+      - "7004:6379"
+
+  redis-node-5:
+    image: redis:latest
+    container_name: redis-node-5
+    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+    networks:
+      - seckill-net
+    ports:
+      - "7005:6379"
+
+  redis-node-6:
+    image: redis:latest
+    container_name: redis-node-6
+    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+    networks:
+      - seckill-net
+    ports:
+      - "7006:6379"
+
+  redis-cluster-creator:
+    image: redis:latest
+    container_name: redis-cluster-creator
+    networks:
+      - seckill-net
+    depends_on:
+      - redis-node-1
+      - redis-node-2
+      - redis-node-3
+      - redis-node-4
+      - redis-node-5
+      - redis-node-6
+    # 等待节点启动并尝试创建集群。在实际生产中，这应该更健壮。
+    # --cluster-replicas 1 表示每个主节点有1个副本 (3主3从)
+    command: >
+      sh -c "
+        echo 'Waiting for Redis nodes to start...' &&
+        sleep 15 &&
+        echo 'Attempting to create Redis cluster...' &&
+        echo 'yes' | redis-cli --cluster create redis-node-1:6379 redis-node-2:6379 redis-node-3:6379 redis-node-4:6379 redis-node-5:6379 redis-node-6:6379 --cluster-replicas 1 && echo 'Redis cluster creation attempt finished.'
+      "
+    # 这个服务在执行完命令后会退出。
+  
+  seckill-service:
+    container_name: seckill-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - seckill-net
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+      - redis-node-1
+      - redis-node-2
+      - redis-node-3
+      - redis-node-4
+      - redis-node-5
+      - redis-node-6
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_NODES: redis-node-1:6379,redis-node-2:6379,redis-node-3:6379,redis-node-4:6379,redis-node-5:6379,redis-node-6:6379
+      REDIS_CLUSTER_ENABLED: true
