@@ -14,7 +14,7 @@ func main() {
 	productId := 1
 
 	// 添加商品到秒杀系统
-	addSeckillProduct(productId, 10000, "2023-5-17 10:00:00")
+	addSeckillProduct(productId, 1000, "2023-5-17 10:00:00")
 	time.Sleep(3 * time.Second) // 等待商品添加完成
 
 	// 启动压测
@@ -24,7 +24,7 @@ func main() {
 func addSeckillProduct(productId int, quantity int, releaseTime string) bool {
 	body := fmt.Sprintf(`{"product_id": %d, "quantity": %d, "release_time": "%s"}`, productId, quantity, releaseTime)
 
-	req, err := http.NewRequest("POST", "http://localhost:8075/seckill/add", bytes.NewReader([]byte(body)))
+	req, err := http.NewRequest("POST", "http://localhost:8080/seckill/add", bytes.NewReader([]byte(body)))
 	if err != nil {
 		fmt.Printf("创建请求失败: %v\n", err)
 		return false
@@ -45,7 +45,7 @@ func addSeckillProduct(productId int, quantity int, releaseTime string) bool {
 func sendSeckillRequest(productId, userId int) bool {
 	reqBody := fmt.Sprintf(`{"product_id": %d, "user_id": %d}`, productId, userId)
 
-	req, err := http.NewRequest("POST", "http://localhost:8075/seckill/tryseckill", bytes.NewReader([]byte(reqBody)))
+	req, err := http.NewRequest("POST", "http://localhost:8080/seckill/tryseckill", bytes.NewReader([]byte(reqBody)))
 	if err != nil {
 		fmt.Printf("创建请求失败: %v\n", err)
 		return false

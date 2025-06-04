@@ -52,7 +52,7 @@ func main() {
 		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 		slog.Info("try seckill success", "productId", req.ProductId, "userId", req.UserId)
 	})
-	if err := http.ListenAndServe(":8075", nil); err != nil {
+	if err := http.ListenAndServe(":8080", nil); err != nil {
 		fmt.Println("Error starting server:", err)
 		return
 	}
