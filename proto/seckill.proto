@@ -9,7 +9,6 @@ option go_package = '/seckill';
 service SeckillService {
   rpc AddItem(AddItemReq) returns (AddItemResp) {}
   rpc TrySecKillItem(TrySecKillItemReq) returns (TrySecKillItemResp) {}
-  //rpc IsSecKillSuccess(TrySecKillItemReq) returns (TrySecKillItemResp) {}
 }
 
 // 参数定义
