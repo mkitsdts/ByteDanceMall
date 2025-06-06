@@ -1,5 +1,5 @@
 {
-    "redis_config": {
+    "redis": {
         "host": [
             "redis-node-1:6379",
             "redis-node-2:6379",
@@ -9,17 +9,17 @@
             "redis-node-6:6379"
         ]
     },
-    "kafka_producer": {
+    "kafka": {
         "brokers": [
             "kafka:9092"
         ],
         "topic": "seckill"
     },
-    "kafka_reader": {
-        "brokers": [
-            "kafka:9092"
-        ],
-        "topic": "seckill",
-        "group_id": "seckill_group"
+    "grpc": {
+        "address": ":50051"
+    },
+    "jaeger": {
+        "endpoint": "http://seckill-jaeger:14268/api/traces",
+        "service_name": "seckill-service"
     }
 }
