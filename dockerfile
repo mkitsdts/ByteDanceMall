@@ -2,6 +2,7 @@ FROM golang:latest AS builder
 
 WORKDIR /app
 COPY . .
+RUN go env -w  GOPROXY=https://goproxy.io,direct
 RUN go mod tidy
 RUN CGO_ENABLED=0 go build -o seckill-service .
 

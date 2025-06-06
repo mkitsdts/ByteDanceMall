@@ -18,7 +18,7 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
       # 添加CONTROLLER监听器
       KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:9092'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       # 设置集群ID
@@ -28,7 +28,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     healthcheck:
-      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "kafka:9092", "--list"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -110,6 +110,16 @@ services:
       "
     # 这个服务在执行完命令后会退出。
   
+  seckill-jaeger:
+    networks:
+    - seckill-net
+    image: jaegertracing/all-in-one:latest
+    container_name: seckill-jaeger
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+      - "6831:6831/udp"
+  
   seckill-service:
     container_name: seckill-service
     build:
@@ -119,6 +129,7 @@ services:
       - seckill-net
     ports:
       - "8080:8080"
+      - "50051:50051" # gRPC端口
     depends_on:
       - kafka
       - redis-node-1
@@ -127,6 +138,7 @@ services:
       - redis-node-4
       - redis-node-5
       - redis-node-6
+      - seckill-jaeger
     environment:
       SPRING_PROFILES_ACTIVE: docker
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
