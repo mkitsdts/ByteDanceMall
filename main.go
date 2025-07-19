@@ -1,6 +1,7 @@
 package main
 
 import (
+	pb "bytedancemall/user/proto"
 	"bytedancemall/user/service"
 	"fmt"
 	"net"
@@ -21,8 +22,12 @@ func main() {
 	s := grpc.NewServer()
 
 	// 创建并注册UserService
-	userService := &service.UserService{}
-	userService.InitUserService()
+	userService, err := service.NewUserService()
+	if err != nil {
+		fmt.Printf("Failed to create user service: %v", err)
+		return
+	}
+	pb.RegisterUserServiceServer(s, userService)
 
 	// 注册reflection服务，便于使用grpcurl等工具调试
 	reflection.Register(s)

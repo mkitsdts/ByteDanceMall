@@ -77,7 +77,8 @@ func (x *RegisterReq) GetPassword() string {
 
 type RegisterResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Result        bool                   `protobuf:"varint,1,opt,name=result,proto3" json:"result,omitempty"`
+	UserId        uint64                 `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -112,7 +113,14 @@ func (*RegisterResp) Descriptor() ([]byte, []int) {
 	return file_user_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *RegisterResp) GetUserId() int64 {
+func (x *RegisterResp) GetResult() bool {
+	if x != nil {
+		return x.Result
+	}
+	return false
+}
+
+func (x *RegisterResp) GetUserId() uint64 {
 	if x != nil {
 		return x.UserId
 	}
@@ -122,7 +130,8 @@ func (x *RegisterResp) GetUserId() int64 {
 type LoginReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	UserId        uint64                 `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Password      string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -162,6 +171,13 @@ func (x *LoginReq) GetEmail() string {
 		return x.Email
 	}
 	return ""
+}
+
+func (x *LoginReq) GetUserId() uint64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
 }
 
 func (x *LoginReq) GetPassword() string {
@@ -231,18 +247,20 @@ const file_user_proto_rawDesc = "" +
 	"user.proto\x12\x04user\"?\n" +
 	"\vRegisterReq\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\"'\n" +
-	"\fRegisterResp\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\"<\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"?\n" +
+	"\fRegisterResp\x12\x16\n" +
+	"\x06result\x18\x01 \x01(\bR\x06result\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\x04R\x06userId\"U\n" +
 	"\bLoginReq\x12\x14\n" +
-	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\"9\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\x04R\x06userId\x12\x1a\n" +
+	"\bpassword\x18\x03 \x01(\tR\bpassword\"9\n" +
 	"\tLoginResp\x12\x16\n" +
 	"\x06result\x18\x01 \x01(\bR\x06result\x12\x14\n" +
 	"\x05token\x18\x02 \x01(\tR\x05token2n\n" +
 	"\vUserService\x123\n" +
 	"\bRegister\x12\x11.user.RegisterReq\x1a\x12.user.RegisterResp\"\x00\x12*\n" +
-	"\x05Login\x12\x0e.user.LoginReq\x1a\x0f.user.LoginResp\"\x00B\aZ\x05/userb\x06proto3"
+	"\x05Login\x12\x0e.user.LoginReq\x1a\x0f.user.LoginResp\"\x00B\x1fZ\x1dbytedancemall/user/proto;userb\x06proto3"
 
 var (
 	file_user_proto_rawDescOnce sync.Once

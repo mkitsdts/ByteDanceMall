@@ -1,6 +1,8 @@
-package service
+package pkg
 
 import (
+	"bytedancemall/user/config"
+	"bytedancemall/user/model"
 	"context"
 	"fmt"
 	"log"
@@ -12,49 +14,67 @@ import (
 	"gorm.io/plugin/dbresolver"
 )
 
+type DatabaseConfig struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	Database string
+}
+
 type Database struct {
 	Client      *gorm.DB     // 使用单一的gorm.DB实例，插件会处理读写分离
 	mu          sync.RWMutex // 使用读写锁提高性能
 	ch          chan bool
-	configs     []MysqlConfig      // 保存配置用于重连
+	configs     []DatabaseConfig   // 保存配置用于重连
 	stopChecker context.CancelFunc // 停止健康检查
 }
 
-func (db *Database) InitDatabase(configs []MysqlConfig) error {
-	if len(configs) == 0 {
-		return fmt.Errorf("no database configs provided")
+func NewDatabase(cfg *config.Config) (*Database, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("no database configs provided")
 	}
-
+	var db Database
 	// 保存配置副本用于重连
-	db.configs = make([]MysqlConfig, len(configs))
-	copy(db.configs, configs)
+	mysqlConfig := make([]config.MysqlConfig, len(cfg.MysqlConfig.Configs))
+	db.configs = make([]DatabaseConfig, len(mysqlConfig))
+	for i, v := range cfg.MysqlConfig.Configs {
+		mysqlConfig[i] = v
+		db.configs[i] = DatabaseConfig{
+			Host:     v.Host,
+			Port:     v.Port,
+			Database: v.Database,
+			User:     v.User,
+			Password: v.Password,
+		}
+	}
 
 	// 构建主库连接字符串
 	masterDSN := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		configs[0].User, configs[0].Password, configs[0].Host, configs[0].Port, configs[0].Database)
+		cfg.MysqlConfig.Configs[0].User, cfg.MysqlConfig.Configs[0].Password, cfg.MysqlConfig.Configs[0].Host, cfg.MysqlConfig.Configs[0].Port, cfg.MysqlConfig.Configs[0].Database)
 
 	// 打开到主库的连接
 	var err error
 	db.Client, err = gorm.Open(mysql.Open(masterDSN), &gorm.Config{})
 	if err != nil {
-		return fmt.Errorf("failed to connect to master database: %w", err)
+		return nil, fmt.Errorf("failed to connect to master database: %w", err)
 	}
 
-	err = db.Client.AutoMigrate(&User{}, &Register{}, &UserSettings{})
+	err = db.Client.AutoMigrate(&model.User{}, &model.Register{}, &model.UserSettings{})
 	if err != nil {
-		return fmt.Errorf("failed to auto migrate: %w", err)
+		return nil, fmt.Errorf("failed to auto migrate: %w", err)
 	}
 
 	// 如果只有一个数据库配置，不需要使用DBResolver
-	if len(configs) == 1 {
-		return nil
+	if len(cfg.MysqlConfig.Configs) == 1 {
+		return &db, nil
 	}
 
 	// 构建从库连接
 	var replicas []gorm.Dialector
-	for i := 1; i < len(configs); i++ {
+	for i := 1; i < len(cfg.MysqlConfig.Configs); i++ {
 		slaveDSN := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-			configs[i].User, configs[i].Password, configs[i].Host, configs[i].Port, configs[i].Database)
+			cfg.MysqlConfig.Configs[i].User, cfg.MysqlConfig.Configs[i].Password, cfg.MysqlConfig.Configs[i].Host, cfg.MysqlConfig.Configs[i].Port, cfg.MysqlConfig.Configs[i].Database)
 		replicas = append(replicas, mysql.Open(slaveDSN))
 	}
 
@@ -68,7 +88,7 @@ func (db *Database) InitDatabase(configs []MysqlConfig) error {
 		SetConnMaxLifetime(time.Hour))
 
 	if err != nil {
-		return fmt.Errorf("failed to configure DBResolver: %w", err)
+		return nil, fmt.Errorf("failed to configure DBResolver: %w", err)
 	}
 
 	// 启动健康检查和故障转移协程
@@ -76,7 +96,7 @@ func (db *Database) InitDatabase(configs []MysqlConfig) error {
 	db.stopChecker = cancel
 	go db.healthCheck(ctx)
 
-	return nil
+	return &db, nil
 }
 
 // 健康检查和故障转移

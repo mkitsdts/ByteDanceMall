@@ -1,4 +1,9 @@
-package service
+package config
+
+import (
+	"encoding/json"
+	"os"
+)
 
 type MysqlConfig struct {
 	Host     string `json:"host"`
@@ -27,8 +32,26 @@ type AuthServerConfig struct {
 	DefaultUsername string `json:"default_username"`
 }
 
-type Configs struct {
+type Config struct {
 	MysqlConfig      MysqlConfigs     `json:"sql_config"`
 	RedisConfig      RedisConfigs     `json:"redis_config"`
 	AuthServerConfig AuthServerConfig `json:"auth_server_config"`
+}
+
+func InitConfigs() (*Config, error) {
+	// 从配置文件中读取配置
+	file, err := os.Open("configs.json")
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	configs := &Config{}
+	err = decoder.Decode(configs)
+	if err != nil {
+		return nil, err
+	}
+
+	return configs, nil
 }
