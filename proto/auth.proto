@@ -4,35 +4,39 @@ syntax="proto3";
 
 package auth;
 
-option go_package="/auth";
+option go_package="bytedancemall/auto/proto;auth";
 
 service AuthService {
-    rpc DeliverTokenByRPC(DeliverTokenReq) returns (DeliveryResp) {}
-    rpc VerifyTokenByRPC(VerifyTokenReq) returns (VerifyResp) {}
+    rpc DeliverTokenByRPC(DeliverTokenReq) returns (DeliveryTokenResp) {}
+    rpc VerifyTokenByRPC(VerifyTokenReq) returns (VerifyTokenResp) {}
     rpc ProlongTokenByRPC(ProlongTokenReq) returns (ProlongTokenResp) {}
 }
 
 message DeliverTokenReq {
-    uint32 user_id = 1;
+    uint64 user_id = 1;
+    string device_id = 2; 
+}
+
+message DeliveryTokenResp {
+    string token = 1;
+    bool result = 2;
 }
 
 message VerifyTokenReq {
     string token = 1;
 }
 
-message DeliveryResp {
-    string token = 1;
-}
-
-message VerifyResp {
+message VerifyTokenResp {
     bool result = 1;
-    uint32 user_id = 2;
+    uint64 user_id = 2;
 }
 
 message ProlongTokenReq {
-    uint32 user_id = 1;
+    uint64 user_id = 1;
+    string device_id = 2;
 }
 
 message ProlongTokenResp {
-    bool result = 1;
+    string token = 1;
+    bool result = 2;
 }

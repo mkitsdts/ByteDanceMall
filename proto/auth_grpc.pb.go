@@ -30,8 +30,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthServiceClient interface {
-	DeliverTokenByRPC(ctx context.Context, in *DeliverTokenReq, opts ...grpc.CallOption) (*DeliveryResp, error)
-	VerifyTokenByRPC(ctx context.Context, in *VerifyTokenReq, opts ...grpc.CallOption) (*VerifyResp, error)
+	DeliverTokenByRPC(ctx context.Context, in *DeliverTokenReq, opts ...grpc.CallOption) (*DeliveryTokenResp, error)
+	VerifyTokenByRPC(ctx context.Context, in *VerifyTokenReq, opts ...grpc.CallOption) (*VerifyTokenResp, error)
 	ProlongTokenByRPC(ctx context.Context, in *ProlongTokenReq, opts ...grpc.CallOption) (*ProlongTokenResp, error)
 }
 
@@ -43,9 +43,9 @@ func NewAuthServiceClient(cc grpc.ClientConnInterface) AuthServiceClient {
 	return &authServiceClient{cc}
 }
 
-func (c *authServiceClient) DeliverTokenByRPC(ctx context.Context, in *DeliverTokenReq, opts ...grpc.CallOption) (*DeliveryResp, error) {
+func (c *authServiceClient) DeliverTokenByRPC(ctx context.Context, in *DeliverTokenReq, opts ...grpc.CallOption) (*DeliveryTokenResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeliveryResp)
+	out := new(DeliveryTokenResp)
 	err := c.cc.Invoke(ctx, AuthService_DeliverTokenByRPC_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -53,9 +53,9 @@ func (c *authServiceClient) DeliverTokenByRPC(ctx context.Context, in *DeliverTo
 	return out, nil
 }
 
-func (c *authServiceClient) VerifyTokenByRPC(ctx context.Context, in *VerifyTokenReq, opts ...grpc.CallOption) (*VerifyResp, error) {
+func (c *authServiceClient) VerifyTokenByRPC(ctx context.Context, in *VerifyTokenReq, opts ...grpc.CallOption) (*VerifyTokenResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(VerifyResp)
+	out := new(VerifyTokenResp)
 	err := c.cc.Invoke(ctx, AuthService_VerifyTokenByRPC_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -77,8 +77,8 @@ func (c *authServiceClient) ProlongTokenByRPC(ctx context.Context, in *ProlongTo
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
 type AuthServiceServer interface {
-	DeliverTokenByRPC(context.Context, *DeliverTokenReq) (*DeliveryResp, error)
-	VerifyTokenByRPC(context.Context, *VerifyTokenReq) (*VerifyResp, error)
+	DeliverTokenByRPC(context.Context, *DeliverTokenReq) (*DeliveryTokenResp, error)
+	VerifyTokenByRPC(context.Context, *VerifyTokenReq) (*VerifyTokenResp, error)
 	ProlongTokenByRPC(context.Context, *ProlongTokenReq) (*ProlongTokenResp, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
@@ -90,10 +90,10 @@ type AuthServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAuthServiceServer struct{}
 
-func (UnimplementedAuthServiceServer) DeliverTokenByRPC(context.Context, *DeliverTokenReq) (*DeliveryResp, error) {
+func (UnimplementedAuthServiceServer) DeliverTokenByRPC(context.Context, *DeliverTokenReq) (*DeliveryTokenResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeliverTokenByRPC not implemented")
 }
-func (UnimplementedAuthServiceServer) VerifyTokenByRPC(context.Context, *VerifyTokenReq) (*VerifyResp, error) {
+func (UnimplementedAuthServiceServer) VerifyTokenByRPC(context.Context, *VerifyTokenReq) (*VerifyTokenResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyTokenByRPC not implemented")
 }
 func (UnimplementedAuthServiceServer) ProlongTokenByRPC(context.Context, *ProlongTokenReq) (*ProlongTokenResp, error) {
