@@ -11,8 +11,5 @@
             "localhost:6379"
         ],
         "password": "root"
-    },
-    "remote_config": {
-        "address": []
     }
 }

@@ -4,69 +4,54 @@ syntax = "proto3";
 
 package order;
 
-option go_package = "/order";
+option go_package = "bytedancemall/order/proto;order";
 
 service OrderService {
-  rpc PlaceOrder(PlaceOrderReq) returns (PlaceOrderResp) {}
   rpc ListOrder(ListOrderReq) returns (ListOrderResp) {}
-  rpc MarkOrderPaid(MarkOrderPaidReq) returns (MarkOrderPaidResp) {}
+  rpc GetOrderStates(GetOrderStatesReq) returns (GetOrderStatesResp) {}
+}
+
+message GetOrderStatesReq {
+  uint64 order_id = 1;
+}
+
+enum OrderStatus {
+  ORDER_STATUS_UNSPECIFIED = 0; // 未知状态
+  ORDER_STATUS_PENDING = 1;     // 待处理
+  ORDER_STATUS_PAID = 2;        // 已支付
+  ORDER_STATUS_SHIPPED = 3;     // 已发货
+  ORDER_STATUS_DELIVERED = 4;   // 已送达
+  ORDER_STATUS_CANCELED = 5;   // 已取消
+}
+
+message GetOrderStatesResp {
+  OrderStatus order_statuses = 1; // 产品对应的订单状态
+}
+
+message ListOrderReq {
+  uint64 user_id = 1;
 }
 
 message Address {
   string street_address = 1;
   string city = 2;
   string state = 3;
-  string country = 4;
-  int32 zip_code = 5;
-}
-
-message PlaceOrderReq {
-  uint32 user_id = 1;
-  string user_currency = 2;
-  Address address = 3;
-  string email = 4;
-  repeated OrderItem order_items = 5;
-}
-
-message CartItem {
-  uint32 product_id = 1;
-  int32  quantity = 2;
 }
 
 message OrderItem {
-  CartItem item = 1;
-  float cost = 2;
-}
-
-message OrderResult {
-  string order_id = 1;
-}
-
-message PlaceOrderResp {
-  OrderResult order = 1;
-}
-
-message ListOrderReq {
-  uint32 user_id = 1;
+  uint64 product_id = 1;
+  uint32 quantity = 2;
 }
 
 message Order {
   repeated OrderItem order_items = 1;
   string order_id = 2;
-  uint32 user_id = 3;
-  string user_currency = 4;
-  Address address = 5;
-  string email = 6;
-  int32 created_at = 7;
+  uint64 user_id = 3;
+  Address address = 4;
+  int64 created_at = 5;
+  int32 current_status = 6;
 }
 
 message ListOrderResp {
   repeated Order orders = 1;
 }
-
-message MarkOrderPaidReq {
-  uint32 user_id = 1;
-  string order_id = 2;
-}
-
-message MarkOrderPaidResp {}
