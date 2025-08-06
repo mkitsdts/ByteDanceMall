@@ -1,0 +1,33 @@
+// 库存模块的定义
+
+syntax="proto3";
+
+package inventory;
+
+option go_package="bytedancemall/inventory/proto;inventory";
+
+service InventoryService {
+    // 减少库存
+    rpc DeduatInventory(DeduatInventoryReq) returns (DeduatInventoryResp) {}
+    // 恢复库存
+    rpc RecoverInventory(RecoverInventoryReq) returns (RecoverInventoryResp) {}
+}
+
+message DeduatInventoryReq {
+    uint64 inventory_id = 1;
+    uint64 order_id = 2;
+    uint64 amount = 3;
+}
+
+message DeduatInventoryResp {
+    bool result = 1;
+}
+
+message RecoverInventoryReq {
+    uint64 order_id = 1;
+    uint64 amount = 2;
+}
+
+message RecoverInventoryResp {
+    bool result = 1;
+}
