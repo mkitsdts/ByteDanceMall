@@ -26,7 +26,6 @@ const (
 type DeliverTokenReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	DeviceId      string                 `protobuf:"bytes,2,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -66,13 +65,6 @@ func (x *DeliverTokenReq) GetUserId() uint64 {
 		return x.UserId
 	}
 	return 0
-}
-
-func (x *DeliverTokenReq) GetDeviceId() string {
-	if x != nil {
-		return x.DeviceId
-	}
-	return ""
 }
 
 type DeliveryTokenResp struct {
@@ -223,119 +215,14 @@ func (x *VerifyTokenResp) GetUserId() uint64 {
 	return 0
 }
 
-type ProlongTokenReq struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	DeviceId      string                 `protobuf:"bytes,2,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ProlongTokenReq) Reset() {
-	*x = ProlongTokenReq{}
-	mi := &file_auth_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ProlongTokenReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ProlongTokenReq) ProtoMessage() {}
-
-func (x *ProlongTokenReq) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ProlongTokenReq.ProtoReflect.Descriptor instead.
-func (*ProlongTokenReq) Descriptor() ([]byte, []int) {
-	return file_auth_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *ProlongTokenReq) GetUserId() uint64 {
-	if x != nil {
-		return x.UserId
-	}
-	return 0
-}
-
-func (x *ProlongTokenReq) GetDeviceId() string {
-	if x != nil {
-		return x.DeviceId
-	}
-	return ""
-}
-
-type ProlongTokenResp struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	Result        bool                   `protobuf:"varint,2,opt,name=result,proto3" json:"result,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ProlongTokenResp) Reset() {
-	*x = ProlongTokenResp{}
-	mi := &file_auth_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ProlongTokenResp) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ProlongTokenResp) ProtoMessage() {}
-
-func (x *ProlongTokenResp) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ProlongTokenResp.ProtoReflect.Descriptor instead.
-func (*ProlongTokenResp) Descriptor() ([]byte, []int) {
-	return file_auth_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *ProlongTokenResp) GetToken() string {
-	if x != nil {
-		return x.Token
-	}
-	return ""
-}
-
-func (x *ProlongTokenResp) GetResult() bool {
-	if x != nil {
-		return x.Result
-	}
-	return false
-}
-
 var File_auth_proto protoreflect.FileDescriptor
 
 const file_auth_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"auth.proto\x12\x04auth\"G\n" +
+	"auth.proto\x12\x04auth\"*\n" +
 	"\x0fDeliverTokenReq\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x1b\n" +
-	"\tdevice_id\x18\x02 \x01(\tR\bdeviceId\"A\n" +
+	"\auser_id\x18\x01 \x01(\x04R\x06userId\"A\n" +
 	"\x11DeliveryTokenResp\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x12\x16\n" +
 	"\x06result\x18\x02 \x01(\bR\x06result\"&\n" +
@@ -343,17 +230,10 @@ const file_auth_proto_rawDesc = "" +
 	"\x05token\x18\x01 \x01(\tR\x05token\"B\n" +
 	"\x0fVerifyTokenResp\x12\x16\n" +
 	"\x06result\x18\x01 \x01(\bR\x06result\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\x04R\x06userId\"G\n" +
-	"\x0fProlongTokenReq\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x1b\n" +
-	"\tdevice_id\x18\x02 \x01(\tR\bdeviceId\"@\n" +
-	"\x10ProlongTokenResp\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\x12\x16\n" +
-	"\x06result\x18\x02 \x01(\bR\x06result2\xdd\x01\n" +
+	"\auser_id\x18\x02 \x01(\x04R\x06userId2\x97\x01\n" +
 	"\vAuthService\x12E\n" +
 	"\x11DeliverTokenByRPC\x12\x15.auth.DeliverTokenReq\x1a\x17.auth.DeliveryTokenResp\"\x00\x12A\n" +
-	"\x10VerifyTokenByRPC\x12\x14.auth.VerifyTokenReq\x1a\x15.auth.VerifyTokenResp\"\x00\x12D\n" +
-	"\x11ProlongTokenByRPC\x12\x15.auth.ProlongTokenReq\x1a\x16.auth.ProlongTokenResp\"\x00B\x1fZ\x1dbytedancemall/auto/proto;authb\x06proto3"
+	"\x10VerifyTokenByRPC\x12\x14.auth.VerifyTokenReq\x1a\x15.auth.VerifyTokenResp\"\x00B\x1fZ\x1dbytedancemall/auto/proto;authb\x06proto3"
 
 var (
 	file_auth_proto_rawDescOnce sync.Once
@@ -367,24 +247,20 @@ func file_auth_proto_rawDescGZIP() []byte {
 	return file_auth_proto_rawDescData
 }
 
-var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_auth_proto_goTypes = []any{
 	(*DeliverTokenReq)(nil),   // 0: auth.DeliverTokenReq
 	(*DeliveryTokenResp)(nil), // 1: auth.DeliveryTokenResp
 	(*VerifyTokenReq)(nil),    // 2: auth.VerifyTokenReq
 	(*VerifyTokenResp)(nil),   // 3: auth.VerifyTokenResp
-	(*ProlongTokenReq)(nil),   // 4: auth.ProlongTokenReq
-	(*ProlongTokenResp)(nil),  // 5: auth.ProlongTokenResp
 }
 var file_auth_proto_depIdxs = []int32{
 	0, // 0: auth.AuthService.DeliverTokenByRPC:input_type -> auth.DeliverTokenReq
 	2, // 1: auth.AuthService.VerifyTokenByRPC:input_type -> auth.VerifyTokenReq
-	4, // 2: auth.AuthService.ProlongTokenByRPC:input_type -> auth.ProlongTokenReq
-	1, // 3: auth.AuthService.DeliverTokenByRPC:output_type -> auth.DeliveryTokenResp
-	3, // 4: auth.AuthService.VerifyTokenByRPC:output_type -> auth.VerifyTokenResp
-	5, // 5: auth.AuthService.ProlongTokenByRPC:output_type -> auth.ProlongTokenResp
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
+	1, // 2: auth.AuthService.DeliverTokenByRPC:output_type -> auth.DeliveryTokenResp
+	3, // 3: auth.AuthService.VerifyTokenByRPC:output_type -> auth.VerifyTokenResp
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -401,7 +277,7 @@ func file_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_proto_rawDesc), len(file_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

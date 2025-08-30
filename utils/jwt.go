@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -71,22 +72,28 @@ func ParseToken(tokenstring string) (*Claims, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	claims, ok := token.Claims.(*Claims)
 	if !ok {
+		slog.Error("invalid token")
 		return nil, fmt.Errorf("无法解析claims")
 	}
 
 	// 使用解析出的用户ID和盐值重新生成密钥进行验证
 	dynamicKey := generateDynamicKey(claims.UserId, claims.Salt)
 
-	t, err := jwt.ParseWithClaims(tokenstring, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+	t, err := jwt.ParseWithClaims(tokenstring, &Claims{}, func(token *jwt.Token) (any, error) {
 		return dynamicKey, nil
 	})
 
-	if claims, ok := t.Claims.(*Claims); ok && t.Valid {
-		return claims, nil
+	// 这里也要类型安全处理
+	parsedClaims, ok := t.Claims.(*Claims)
+	if ok && t.Valid {
+		return parsedClaims, nil
+	} else if !t.Valid {
+		slog.Error("invalid token")
+		return nil, fmt.Errorf("invalid token")
 	} else {
+		slog.Error("failed to parse token")
 		return nil, err
 	}
 }

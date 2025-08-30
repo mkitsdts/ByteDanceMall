@@ -23,7 +23,6 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	AuthService_DeliverTokenByRPC_FullMethodName = "/auth.AuthService/DeliverTokenByRPC"
 	AuthService_VerifyTokenByRPC_FullMethodName  = "/auth.AuthService/VerifyTokenByRPC"
-	AuthService_ProlongTokenByRPC_FullMethodName = "/auth.AuthService/ProlongTokenByRPC"
 )
 
 // AuthServiceClient is the client API for AuthService service.
@@ -32,7 +31,6 @@ const (
 type AuthServiceClient interface {
 	DeliverTokenByRPC(ctx context.Context, in *DeliverTokenReq, opts ...grpc.CallOption) (*DeliveryTokenResp, error)
 	VerifyTokenByRPC(ctx context.Context, in *VerifyTokenReq, opts ...grpc.CallOption) (*VerifyTokenResp, error)
-	ProlongTokenByRPC(ctx context.Context, in *ProlongTokenReq, opts ...grpc.CallOption) (*ProlongTokenResp, error)
 }
 
 type authServiceClient struct {
@@ -63,23 +61,12 @@ func (c *authServiceClient) VerifyTokenByRPC(ctx context.Context, in *VerifyToke
 	return out, nil
 }
 
-func (c *authServiceClient) ProlongTokenByRPC(ctx context.Context, in *ProlongTokenReq, opts ...grpc.CallOption) (*ProlongTokenResp, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ProlongTokenResp)
-	err := c.cc.Invoke(ctx, AuthService_ProlongTokenByRPC_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
 type AuthServiceServer interface {
 	DeliverTokenByRPC(context.Context, *DeliverTokenReq) (*DeliveryTokenResp, error)
 	VerifyTokenByRPC(context.Context, *VerifyTokenReq) (*VerifyTokenResp, error)
-	ProlongTokenByRPC(context.Context, *ProlongTokenReq) (*ProlongTokenResp, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -95,9 +82,6 @@ func (UnimplementedAuthServiceServer) DeliverTokenByRPC(context.Context, *Delive
 }
 func (UnimplementedAuthServiceServer) VerifyTokenByRPC(context.Context, *VerifyTokenReq) (*VerifyTokenResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyTokenByRPC not implemented")
-}
-func (UnimplementedAuthServiceServer) ProlongTokenByRPC(context.Context, *ProlongTokenReq) (*ProlongTokenResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ProlongTokenByRPC not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 func (UnimplementedAuthServiceServer) testEmbeddedByValue()                     {}
@@ -156,24 +140,6 @@ func _AuthService_VerifyTokenByRPC_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthService_ProlongTokenByRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ProlongTokenReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).ProlongTokenByRPC(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthService_ProlongTokenByRPC_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).ProlongTokenByRPC(ctx, req.(*ProlongTokenReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -188,10 +154,6 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VerifyTokenByRPC",
 			Handler:    _AuthService_VerifyTokenByRPC_Handler,
-		},
-		{
-			MethodName: "ProlongTokenByRPC",
-			Handler:    _AuthService_ProlongTokenByRPC_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

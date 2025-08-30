@@ -9,12 +9,10 @@ option go_package="bytedancemall/auto/proto;auth";
 service AuthService {
     rpc DeliverTokenByRPC(DeliverTokenReq) returns (DeliveryTokenResp) {}
     rpc VerifyTokenByRPC(VerifyTokenReq) returns (VerifyTokenResp) {}
-    rpc ProlongTokenByRPC(ProlongTokenReq) returns (ProlongTokenResp) {}
 }
 
 message DeliverTokenReq {
     uint64 user_id = 1;
-    string device_id = 2; 
 }
 
 message DeliveryTokenResp {
@@ -29,14 +27,4 @@ message VerifyTokenReq {
 message VerifyTokenResp {
     bool result = 1;
     uint64 user_id = 2;
-}
-
-message ProlongTokenReq {
-    uint64 user_id = 1;
-    string device_id = 2;
-}
-
-message ProlongTokenResp {
-    string token = 1;
-    bool result = 2;
 }
