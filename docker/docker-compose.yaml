@@ -54,18 +54,18 @@ services:
       KAFKA_KRAFT_CLUSTER_ID: "$(< /dev/urandom tr -dc 0-9 | head -c32)"
     volumes:
       - kafka_data:/var/lib/kafka/data
-      
+
   # Inventory service
-  #inventory-service:
-  #  build:
-  #    context: ..
-  #    dockerfile: ./docker/dockerfile
-  #  ports:
-  #    - "14802:14802"
-  #  depends_on:
-  #    - mysql
-  #    - redis
-  #    - kafka
+  inventory-service:
+    build:
+      context: ..
+      dockerfile: ./docker/dockerfile
+    ports:
+     - "14802:14802"
+    depends_on:
+      - mysql
+      - kafka
+      - redis
 
 volumes:
   mysql_data:

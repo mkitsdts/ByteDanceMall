@@ -40,7 +40,8 @@
         "topic": [
             "gomall-inventory-deduct",
             "gomall-inventory-recovery",
-            "gomall-inventory-reduct"
+            "gomall-inventory-reduce",
+            "gomall-inventory-dmq"
         ],
         "group_id": "1"
     }

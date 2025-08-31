@@ -3,6 +3,20 @@ FROM golang:latest AS builder
 WORKDIR /app
 
 COPY . .
-COPY ./configs.json ./app
+COPY ./configs.json .
 
-RUN go build -o inventory-service ./cmd/inventory-service
+RUN go env -w  GOPROXY=https://goproxy.io,direct
+RUN go mod tidy
+RUN go build -o inventory-service ./cmd
+
+RUN ls -l /app
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /app
+COPY --from=builder /app/inventory-service .
+# 如果有配置文件，记得也复制它
+COPY configs.json .
+
+EXPOSE 14802
+CMD ["./inventory-service"]

@@ -10,16 +10,16 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func NewKafkaWriter(cfg *config.KafkaWriter) (map[string]*kafka.Writer, error) {
-	if err := ensureTopics(cfg.Host, cfg.Topic); err != nil {
+func NewKafkaWriter() (map[string]*kafka.Writer, error) {
+	if err := ensureTopics(config.Cfg.KafkaReader.Host, config.Cfg.KafkaReader.Topic); err != nil {
 		return nil, fmt.Errorf("failed to ensure kafka topics: %w", err)
 	}
 
 	writers := make(map[string]*kafka.Writer)
 
-	for _, topic := range cfg.Topic {
+	for _, topic := range config.Cfg.KafkaReader.Topic {
 		writer := kafka.NewWriter(kafka.WriterConfig{
-			Brokers: cfg.Host,
+			Brokers: config.Cfg.KafkaReader.Host,
 			Topic:   topic,
 		})
 		writers[topic] = writer
@@ -34,18 +34,18 @@ func NewKafkaWriter(cfg *config.KafkaWriter) (map[string]*kafka.Writer, error) {
 	return writers, nil
 }
 
-func NewKafkaReader(cfg *config.KafkaReader) (map[string]*kafka.Reader, error) {
-	if err := ensureTopics(cfg.Host, cfg.Topic); err != nil {
+func NewKafkaReader() (map[string]*kafka.Reader, error) {
+	if err := ensureTopics(config.Cfg.KafkaReader.Host, config.Cfg.KafkaReader.Topic); err != nil {
 		return nil, fmt.Errorf("failed to ensure kafka topics: %w", err)
 	}
 	readers := make(map[string]*kafka.Reader)
-	for _, topic := range cfg.Topic {
+	for _, topic := range config.Cfg.KafkaReader.Topic {
 		reader := kafka.NewReader(kafka.ReaderConfig{
-			Brokers:  cfg.Host,
+			Brokers:  config.Cfg.KafkaReader.Host,
 			Topic:    topic,
 			MaxWait:  10 * time.Second,
 			MaxBytes: 10e6,
-			GroupID:  cfg.GroupID,
+			GroupID:  config.Cfg.KafkaReader.GroupID,
 		})
 		readers[topic] = reader
 	}

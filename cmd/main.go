@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytedancemall/inventory/config"
+	"bytedancemall/inventory/model"
 	"bytedancemall/inventory/pkg"
 	pb "bytedancemall/inventory/proto"
 	"bytedancemall/inventory/service"
@@ -24,13 +25,12 @@ func main() {
 	// 创建gRPC服务器
 	s := grpc.NewServer()
 
-	cfg, err := config.ReadConfig()
-	if err != nil {
+	if err := config.Init(); err != nil {
 		fmt.Printf("Failed to read config: %v", err)
 		return
 	}
 
-	database, err := pkg.NewDatabase(&cfg.Database)
+	database, err := pkg.NewDatabase(&model.Inventory{}, &model.OutInventory{})
 	if err != nil {
 		fmt.Printf("Failed to initialize database: %v", err)
 		return
@@ -42,19 +42,19 @@ func main() {
 	// 	return
 	// }
 
-	redis, err := pkg.NewRedisClient(&cfg.Redis)
+	redis, err := pkg.NewRedisClient()
 	if err != nil {
 		fmt.Printf("Failed to initialize redis: %v", err)
 		return
 	}
 
-	reader, err := pkg.NewKafkaReader(&cfg.KafkaReader)
+	reader, err := pkg.NewKafkaReader()
 	if err != nil {
 		fmt.Printf("Failed to initialize kafka: %v", err)
 		return
 	}
 
-	writer, err := pkg.NewKafkaWriter(&cfg.KafkaWriter)
+	writer, err := pkg.NewKafkaWriter()
 	if err != nil {
 		fmt.Printf("Failed to initialize kafka writer: %v", err)
 		return

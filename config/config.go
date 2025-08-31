@@ -5,6 +5,8 @@ import (
 	"os"
 )
 
+var Cfg *Config
+
 type DatabaseConfig struct {
 	Master       string   `json:"master"`
 	Slaves       []string `json:"slaves"`
@@ -53,18 +55,17 @@ type Config struct {
 	KafkaReader KafkaReader    `json:"kafka_reader"`
 }
 
-func ReadConfig() (*Config, error) {
-	var config Config
+func Init() error {
 	file, err := os.Open("configs.json")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&config); err != nil {
-		return nil, err
+	if err := decoder.Decode(&Cfg); err != nil {
+		return err
 	}
 
-	return &config, nil
+	return nil
 }
