@@ -1,0 +1,8 @@
+FROM golang:latest AS builder
+
+WORKDIR /app
+
+COPY . .
+COPY ./configs.json ./app
+
+RUN go build -o inventory-service ./cmd/inventory-service

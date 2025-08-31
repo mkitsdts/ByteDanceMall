@@ -19,36 +19,43 @@ type DatabaseConfig struct {
 
 type RedisConfig struct {
 	Host     []string `json:"host"`
-	Port     string   `json:"port"`
+	Port     int      `json:"port"`
 	Password string   `json:"password"`
 }
 
-type KafkaWriterConfig struct {
+type KafkaWriter struct {
 	Host     []string `json:"host"`
 	Port     string   `json:"port"`
 	Username string   `json:"username"`
 	Password string   `json:"password"`
-	Topic    string   `json:"topic"`
+	Topic    []string `json:"topic"`
+	GroupID  string   `json:"group_id"`
 }
 
-type KafkaReaderConfig struct {
+type KafkaReader struct {
 	Host     []string `json:"host"`
 	Port     string   `json:"port"`
 	Username string   `json:"username"`
 	Password string   `json:"password"`
-	Topic    string   `json:"topic"`
+	Topic    []string `json:"topic"`
+	GroupID  string   `json:"group_id"`
+}
+
+type Server struct {
+	Port int `json:"port"`
 }
 
 type Config struct {
-	Database    DatabaseConfig    `json:"database"`
-	Redis       RedisConfig       `json:"redis"`
-	KafkaWriter KafkaWriterConfig `json:"kafka_writer"`
-	KafkaReader KafkaReaderConfig `json:"kafka_reader"`
+	Server      Server         `json:"server"`
+	Database    DatabaseConfig `json:"database"`
+	Redis       RedisConfig    `json:"redis"`
+	KafkaWriter KafkaWriter    `json:"kafka_writer"`
+	KafkaReader KafkaReader    `json:"kafka_reader"`
 }
 
 func ReadConfig() (*Config, error) {
 	var config Config
-	file, err := os.Open("config.json")
+	file, err := os.Open("configs.json")
 	if err != nil {
 		return nil, err
 	}

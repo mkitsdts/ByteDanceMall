@@ -32,7 +32,19 @@ func NewDatabase(cfg *config.DatabaseConfig) (*Database, error) {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to master database: %w", err)
+		return NewDatabase(cfg)
+	}
+
+	db.Master = master
+
+	if len(cfg.Slaves) == 0 {
+		maxRetries := 5
+		for range maxRetries {
+			if err := master.AutoMigrate(&model.Inventory{}); err == nil {
+				return &db, nil
+			}
+			time.Sleep(time.Second * 2)
+		}
 	}
 
 	// 准备从库DSN
@@ -55,7 +67,7 @@ func NewDatabase(cfg *config.DatabaseConfig) (*Database, error) {
 		Policy:   dbresolver.RandomPolicy{},               // 随机选择从库
 	}))
 	if err != nil {
-		return nil, fmt.Errorf("failed to register dbresolver: %w", err)
+		return NewDatabase(cfg)
 	}
 
 	// 配置连接池
@@ -66,7 +78,7 @@ func NewDatabase(cfg *config.DatabaseConfig) (*Database, error) {
 	}
 
 	// 自动迁移模型
-	if err := master.AutoMigrate(&model.Inventory{}, &model.DevoteStock{}); err != nil {
+	if err := master.AutoMigrate(&model.Inventory{}); err != nil {
 		return nil, fmt.Errorf("failed to auto migrate models: %w", err)
 	}
 

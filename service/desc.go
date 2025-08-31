@@ -16,7 +16,7 @@ func (s *InventoryService) ConsumeReduceMsg(ctx context.Context) {
 		return
 	default:
 		for {
-			msg, err := s.Reader["reduce"].ReadMessage(ctx)
+			msg, err := s.Reader["gomall-inventory-reduce"].FetchMessage(ctx)
 			if err != nil {
 				slog.Error("Failed to read message", "error", err)
 				continue
@@ -48,7 +48,7 @@ func (s *InventoryService) reduce(ctx context.Context, msg kafka.Message) {
 	}()
 	var inventory model.Inventory
 	var valueUint uint64
-	if err := tx.Where("id = ?", string(msg.Key)).First(&inventory).Error; err != nil {
+	if err := tx.Where("product_id = ?", string(msg.Key)).First(&inventory).Error; err != nil {
 		slog.Error("Failed to find inventory", "error", err)
 		valueStr := string(msg.Value)
 		valueUint, err = strconv.ParseUint(valueStr, 10, 64)
@@ -65,7 +65,7 @@ func (s *InventoryService) reduce(ctx context.Context, msg kafka.Message) {
 		return
 	}
 	inventory.TotalStock -= valueUint
-	inventory.LockedStock += valueUint
+	inventory.LockedStock -= valueUint
 	inventory.Version++
 	inventory.UpdatedAt = time.Now()
 	if err := tx.Save(&inventory).Error; err != nil {
@@ -79,7 +79,7 @@ func (s *InventoryService) reduce(ctx context.Context, msg kafka.Message) {
 		return
 	}
 	slog.Info("Successfully reduced inventory", "key", string(msg.Key), "new_amount", inventory.TotalStock)
-	s.Reader["reduce"].CommitMessages(ctx, msg)
+	s.Reader["gomall-inventory-reduce"].CommitMessages(ctx, msg)
 	s.Redis.Del(ctx, "inventory:"+string(msg.Key)) // 删除缓存
 	time.Sleep(100 * time.Millisecond)
 	slog.Info("Cache cleared for inventory", "key", string(msg.Key))

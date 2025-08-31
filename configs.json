@@ -1,0 +1,47 @@
+{
+    "server": {
+        "port": 14802
+    },
+    "database": {
+        "master": "localhost",
+        "slaves": [],
+        "port": 3306,
+        "username": "user",
+        "password": "password",
+        "name": "inventory"
+    },
+    "redis": {
+        "host": [
+            "localhost"
+        ],
+        "port": 6379
+    },
+    "kafka_writer": {
+        "host": [
+            "localhost"
+        ],
+        "port": "9092",
+        "username": "",
+        "password": "",
+        "topic": [
+            "gomall-inventory-deduct",
+            "gomall-inventory-recovery",
+            "gomall-inventory-reduct"
+        ],
+        "group_id": "1"
+    },
+    "kafka_reader": {
+        "host": [
+            "localhost"
+        ],
+        "port": "9092",
+        "username": "root",
+        "password": "root",
+        "topic": [
+            "gomall-inventory-deduct",
+            "gomall-inventory-recovery",
+            "gomall-inventory-reduct"
+        ],
+        "group_id": "1"
+    }
+}
