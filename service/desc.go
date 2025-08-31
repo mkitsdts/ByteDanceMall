@@ -10,35 +10,25 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func (s *InventoryService) ConsumeReduceMsg(ctx context.Context) {
-	select {
-	case <-ctx.Done():
-		return
-	default:
-		for {
-			msg, err := s.Reader["gomall-inventory-reduce"].FetchMessage(ctx)
-			if err != nil {
-				slog.Error("Failed to read message", "error", err)
-				continue
-			}
-			slog.Info("Received reduce message", "key", string(msg.Key), "value", string(msg.Value))
-			// 处理消息
-			go s.reduce(ctx, msg)
+func (s *InventoryService) LoopReduce() {
+	for {
+		msg, err := s.Reader["gomall-inventory-reduce"].FetchMessage(context.Background())
+		if err != nil {
+			slog.Error("Failed to read message", "error", err)
+			continue
 		}
+		slog.Info("Received reduce message", "key", string(msg.Key), "value", string(msg.Value))
+		// 处理消息
+		go s.reduce(msg)
 	}
+
 }
 
 // 扣减库存
-func (s *InventoryService) reduce(ctx context.Context, msg kafka.Message) {
-	select {
-	case <-ctx.Done():
-		slog.Warn("Context done, stopping reduce operation")
-		return
-	default:
-	}
+func (s *InventoryService) reduce(msg kafka.Message) {
 	// 持久化至数据库
 	slog.Info("Reducing inventory", "key", string(msg.Key), "value", string(msg.Value))
-
+	ctx := context.Background()
 	tx := s.DB.Master.Begin()
 	defer func() {
 		if r := recover(); r != nil {

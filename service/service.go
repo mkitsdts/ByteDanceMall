@@ -77,5 +77,6 @@ func NewInventoryService(db *pkg.Database, redis *redis.Client, writer map[strin
 	service.Reader = readers
 	service.Redis = redis
 	go service.LoopDeduct()
+	go service.LoopReduce()
 	return &service
 }
