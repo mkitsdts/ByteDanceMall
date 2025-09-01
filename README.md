@@ -4,21 +4,24 @@
 
 需要实现的功能
 
-- 创建购物车
-- 清空购物车
-- 获取购物车信息
+- 添加商品
+- 调整数量
+- 删除商品
+- 展示购物车内容
 
 已经实现的功能
 
-- 创建购物车
-- 清空购物车
-- 获取购物车
+- 添加商品
+- 调整数量
+- 删除商品
+- 展示购物车内容
 
 ## 接口设计
 
-- 创建购物车    rpc AddItem(AddItemReq) returns (AddItemResp) {}
-- 清空购物车    rpc EmptyCart(EmptyCartReq) returns (EmptyCartResp) {}
-- 获取购物车    rpc GetCart(GetCartReq) returns (GetCartResp) {}
+- 添加商品         rpc AddItem(AddItemReq) returns (AddItemResp) {}
+- 调整数量         rpc ModifyItemCount(ModifyItemCountReq) returns (ModifyItemCountResp) {}
+- 删除商品         rpc RemoveItem(RemoveItemReq) returns (RemoveItemResp) {}
+- 展示购物车内容    rpc GetCart(GetCartReq) returns (GetCartResp) {}
 
 ## 接口参数及返回值
 
@@ -27,29 +30,43 @@ CartItem {
   int32  quantity;
 }
 
+Cart {
+  uint32 user_id;
+  CartItem items[];
+}
+
 AddItemReq {
   uint32 user_id;
   CartItem item;
 }
 
-AddItemResp {}
+AddItemResp {
+  bool result;
+}
 
-EmptyCartReq {
+ModifyItemCountReq {
   uint32 user_id;
+  CartItem item[];
+}
+
+ModifyItemCountResp {
+  bool result;
 }
 
 GetCartReq {
   uint32 user_id;
+  int page;
 }
 
 GetCartResp {
   Cart cart;
 }
 
-Cart {
+RemoveItemReq {
   uint32 user_id;
-  CartItem items[];
+  CartItem item;
 }
 
-EmptyCartResp {
+RemoveItemResp {
+  bool result;
 }

@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  # MySQL service
+  mysql:
+    image: mysql:8.0
+    container_name: gomall-cart-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: cart
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis service
+  redis:
+    image: redis:8
+    container_name: gomall-cart-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Cart service
+  #cart-service:
+  #  build:
+  #    context: ..
+  #    dockerfile: ./docker/dockerfile
+  #  ports:
+  #   - "14803:14803"
+  #  depends_on:
+  #    - mysql
+  #    - redis
+
+volumes:
+  mysql_data:
+  redis_data:
