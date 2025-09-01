@@ -2,45 +2,70 @@ package config
 
 import (
 	"encoding/json"
-	"log/slog"
 	"os"
 )
 
-type MysqlConfig struct {
-	Host     []string `json:"host"`
-	Port     string   `json:"port"`
-	User     string   `json:"user"`
-	Password string   `json:"password"`
-	Database string   `json:"database"`
+var Cfg *Config
+
+type DatabaseConfig struct {
+	Master       string   `json:"master"`
+	Slaves       []string `json:"slaves"`
+	Name         string   `json:"name"`
+	Host         string   `json:"host"`
+	Port         int      `json:"port"`
+	Username     string   `json:"username"`
+	Password     string   `json:"password"`
+	MaxIdleConns int      `json:"max_idle_conns"`
+	MaxOpenConns int      `json:"max_open_conns"`
 }
 
 type RedisConfig struct {
-	Host     []string `json:"configs"`
+	Host     []string `json:"host"`
 	Port     int      `json:"port"`
 	Password string   `json:"password"`
 }
 
-type KafkaConfig struct {
-	Brokers []string `json:"brokers"`
-	Topic   string   `json:"topic"`
+type KafkaWriter struct {
+	Host     []string `json:"host"`
+	Port     string   `json:"port"`
+	Username string   `json:"username"`
+	Password string   `json:"password"`
+	Topic    []string `json:"topic"`
+	GroupID  string   `json:"group_id"`
+}
+
+type KafkaReader struct {
+	Host     []string `json:"host"`
+	Port     string   `json:"port"`
+	Username string   `json:"username"`
+	Password string   `json:"password"`
+	Topic    []string `json:"topic"`
+	GroupID  string   `json:"group_id"`
+}
+
+type Server struct {
+	Port int `json:"port"`
 }
 
 type Config struct {
-	MysqlConfig MysqlConfig `json:"mysql"`
-	RedisConfig RedisConfig `json:"redis"`
-	Kafka       KafkaConfig `json:"kafka"`
+	Server      Server         `json:"server"`
+	Database    DatabaseConfig `json:"database"`
+	Redis       RedisConfig    `json:"redis"`
+	KafkaWriter KafkaWriter    `json:"kafka_writer"`
+	KafkaReader KafkaReader    `json:"kafka_reader"`
 }
 
-func NewConfig() (*Config, error) {
-	file, err := os.ReadFile("config.json")
+func Init() error {
+	file, err := os.Open("configs.json")
 	if err != nil {
-		slog.Error("Failed to read config file", "error", err)
-		return nil, err
+		return err
 	}
-	var cfg Config
-	if err := json.Unmarshal(file, &cfg); err != nil {
-		slog.Error("Failed to unmarshal config", "error", err)
-		return nil, err
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&Cfg); err != nil {
+		return err
 	}
-	return &cfg, nil
+
+	return nil
 }

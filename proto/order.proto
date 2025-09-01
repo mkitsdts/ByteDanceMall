@@ -8,24 +8,17 @@ option go_package = "bytedancemall/order/proto;order";
 
 service OrderService {
   rpc ListOrder(ListOrderReq) returns (ListOrderResp) {}
-  rpc GetOrderStates(GetOrderStatesReq) returns (GetOrderStatesResp) {}
+  rpc GetOrderStatus(GetOrderStatusReq) returns (GetOrderStatusResp) {}
+  rpc ApplyOrderID(ApplyOrderIDReq) returns (ApplyOrderIDResp) {}
+  rpc CreateOrder(CreateOrderReq) returns (CreateOrderResp) {}
 }
 
-message GetOrderStatesReq {
+message GetOrderStatusReq {
   uint64 order_id = 1;
 }
 
-enum OrderStatus {
-  ORDER_STATUS_UNSPECIFIED = 0; // 未知状态
-  ORDER_STATUS_PENDING = 1;     // 待处理
-  ORDER_STATUS_PAID = 2;        // 已支付
-  ORDER_STATUS_SHIPPED = 3;     // 已发货
-  ORDER_STATUS_DELIVERED = 4;   // 已送达
-  ORDER_STATUS_CANCELED = 5;   // 已取消
-}
-
-message GetOrderStatesResp {
-  OrderStatus order_statuses = 1; // 产品对应的订单状态
+message GetOrderStatusResp {
+  int32 order_status = 1; // 产品对应的订单状态
 }
 
 message ListOrderReq {
@@ -38,20 +31,39 @@ message Address {
   string state = 3;
 }
 
-message OrderItem {
-  uint64 product_id = 1;
-  uint32 quantity = 2;
-}
-
 message Order {
-  repeated OrderItem order_items = 1;
-  string order_id = 2;
+  uint64 product_id = 1;
+  uint64 amount = 2;
   uint64 user_id = 3;
   Address address = 4;
   int64 created_at = 5;
-  int32 current_status = 6;
+  int32 status = 6;
+  float cost = 7;
+  uint64 order_id = 8;
 }
 
 message ListOrderResp {
   repeated Order orders = 1;
+}
+
+message ApplyOrderIDReq {
+  uint64 user_id = 1;
+}
+
+message ApplyOrderIDResp {
+  uint64 order_id = 1;
+  bool result = 2;
+}
+
+message CreateOrderReq {
+  uint64 user_id = 1;
+  uint64 product_id = 2;
+  uint64 amount = 3;
+  Address address = 4;
+  uint64 order_id = 5;
+  float cost = 6;
+}
+
+message CreateOrderResp {
+  bool result = 1;
 }

@@ -1,94 +1,141 @@
 package service
 
 import (
+	"bytedancemall/order/pkg"
 	pb "bytedancemall/order/proto"
+	"bytedancemall/order/utils"
 	"context"
 	"encoding/json"
-	"strconv"
-	"time"
+	"fmt"
 )
 
 func (s *OrderService) ListOrder(ctx context.Context, req *pb.ListOrderReq) (*pb.ListOrderResp, error) {
-	// 从Redis中获取订单
-	val := s.Redis.Get(ctx, strconv.FormatUint(uint64(req.UserId), 10)).Val()
-	if val != "" {
-		// 返回订单
-		var pbOrders []*pb.Order
-		orders := []Order{}
-		json.Unmarshal([]byte(val), &orders)
-		for _, order := range orders {
-			pbOrders = append(pbOrders, &pb.Order{
-				OrderId: order.OrderId,
-				UserId:  order.UserId,
-				Address: &pb.Address{
-					StreetAddress: order.StreetAddress,
-					City:          order.City,
-					State:         order.State,
-				},
-			})
+	id := req.UserId
+	data, err := pkg.GetRedisCli().Get(ctx, "order_list_"+fmt.Sprint(id)).Result()
+	var orders Orders
+	if err == nil {
+		if err := json.Unmarshal([]byte(data), &orders); err == nil {
+			respBody := make([]*pb.Order, 0, len(orders.Items))
+			for _, item := range orders.Items {
+				respBody = append(respBody, &pb.Order{
+					OrderId:   item.OrderId,
+					UserId:    item.UserId,
+					ProductId: item.ProductID,
+					Amount:    item.Amount,
+					Cost:      item.Cost,
+					Status:    item.Status,
+				})
+			}
+			return &pb.ListOrderResp{
+				Orders: respBody,
+			}, nil
+		} else {
+			return &pb.ListOrderResp{
+				Orders: nil,
+			}, err
 		}
-		return &pb.ListOrderResp{Orders: pbOrders}, nil
 	}
+	tx := pkg.DB().Begin()
 
-	// redis中没有订单，从数据库中获取订单
-	var orders []Order
-	s.Db.Master.Where("user_id = ?", req.UserId).Find(&orders)
-	// 返回订单
-	var pbOrders []*pb.Order
-	for _, order := range orders {
-		pbOrders = append(pbOrders, &pb.Order{
-			OrderId: order.OrderId,
-			UserId:  order.UserId,
-			Address: &pb.Address{
-				StreetAddress: order.StreetAddress,
-				City:          order.City,
-				State:         order.State,
-			},
+	maxRetries := 5
+	for i := 0; i < maxRetries; i++ {
+		if err := tx.Where("user_id = ?", id).Find(&orders.Items).Error; err == nil {
+			break
+		}
+		if i == maxRetries-1 {
+			tx.Rollback()
+			return &pb.ListOrderResp{
+				Orders: nil,
+			}, err
+		}
+	}
+	tx.Commit()
+	respBody := make([]*pb.Order, 0, len(orders.Items))
+	for _, item := range orders.Items {
+		respBody = append(respBody, &pb.Order{
+			OrderId:   item.OrderId,
+			UserId:    item.UserId,
+			ProductId: item.ProductID,
+			Amount:    item.Amount,
+			Cost:      item.Cost,
+			Status:    item.Status,
 		})
 	}
-
-	// 将订单存入Redis
-	bytes, _ := json.Marshal(orders)
-	s.Redis.Set(ctx, strconv.FormatUint(uint64(req.UserId), 10), bytes, 5*time.Minute)
-	return &pb.ListOrderResp{Orders: pbOrders}, nil
+	return &pb.ListOrderResp{
+		Orders: respBody,
+	}, nil
 }
 
-func (s *OrderService) GetOrderStates(ctx context.Context, req *pb.GetOrderStatesReq) (*pb.GetOrderStatesResp, error) {
-	// 从Redis中获取订单状态
-	val := s.Redis.Get(ctx, strconv.FormatUint(req.OrderId, 10)).Val()
-	if val != "" {
-		return &pb.GetOrderStatesResp{OrderStatuses: pb.OrderStatus_ORDER_STATUS_PENDING}, nil
-	}
-
-	// redis中没有订单状态，从数据库中获取订单状态
+func (s *OrderService) GetOrderStatus(ctx context.Context, req *pb.GetOrderStatusReq) (*pb.GetOrderStatusResp, error) {
 	var order Order
-	if err := s.Db.Master.Where("order_id = ?", req.OrderId).First(&order).Error; err != nil {
-		return nil, err
+	result, err := pkg.GetRedisCli().Get(ctx, "order_"+fmt.Sprint(req.OrderId)).Result()
+	if err == nil {
+		if err := json.Unmarshal([]byte(result), &order); err == nil {
+			return &pb.GetOrderStatusResp{
+				OrderStatus: order.Status,
+			}, nil
+		}
 	}
+	tx := pkg.DB().Begin()
 
-	var result pb.OrderStatus
-	switch order.State {
-	case "WAITING_PAYMENT":
-		order.State = pb.OrderStatus_ORDER_STATUS_PENDING.String()
-		result = pb.OrderStatus_ORDER_STATUS_PENDING
-	case "PAID":
-		order.State = pb.OrderStatus_ORDER_STATUS_PAID.String()
-		result = pb.OrderStatus_ORDER_STATUS_PAID
-	case "SHIPPED":
-		order.State = pb.OrderStatus_ORDER_STATUS_SHIPPED.String()
-		order.State = pb.OrderStatus_ORDER_STATUS_SHIPPED.String()
-	case "DELIVERED":
-		order.State = pb.OrderStatus_ORDER_STATUS_DELIVERED.String()
-		order.State = pb.OrderStatus_ORDER_STATUS_DELIVERED.String()
-	case "CANCELED":
-		order.State = pb.OrderStatus_ORDER_STATUS_CANCELED.String()
-		order.State = pb.OrderStatus_ORDER_STATUS_CANCELED.String()
-	default:
-		order.State = pb.OrderStatus_ORDER_STATUS_UNSPECIFIED.String()
-		result = pb.OrderStatus_ORDER_STATUS_UNSPECIFIED
+	maxRetries := 5
+	for i := range maxRetries {
+		if err := tx.Where("id = ?", req.OrderId).First(&order).Error; err == nil {
+			return &pb.GetOrderStatusResp{
+				OrderStatus: order.Status,
+			}, nil
+		}
+		if i == maxRetries-1 {
+			tx.Rollback()
+			return &pb.GetOrderStatusResp{
+				OrderStatus: -1,
+			}, err
+		}
 	}
+	tx.Commit()
+	return &pb.GetOrderStatusResp{
+		OrderStatus: -1,
+	}, nil
+}
 
-	// 将订单状态存入Redis
-	s.Redis.Set(ctx, strconv.FormatUint(req.OrderId, 10), order.State, 5*time.Minute)
-	return &pb.GetOrderStatesResp{OrderStatuses: result}, nil
+func (s *OrderService) CreateOrder(ctx context.Context, req *pb.CreateOrderReq) (*pb.CreateOrderResp, error) {
+	tx := pkg.DB().Begin()
+
+	maxRetries := 5
+	var err error
+	for i := range maxRetries {
+		if err = tx.Create(&Order{
+			UserId:    req.UserId,
+			ProductID: req.ProductId,
+			Amount:    req.Amount,
+			Cost:      req.Cost,
+			Status:    WAITING_PAYMENT,
+		}).Error; err == nil {
+			if err = tx.Commit().Error; err != nil {
+				return &pb.CreateOrderResp{
+					Result: false,
+				}, err
+			} else {
+				continue
+			}
+		}
+		if i == maxRetries-1 {
+			tx.Rollback()
+			return &pb.CreateOrderResp{
+				OrderId: 0,
+			}, err
+		}
+	}
+	tx.Commit()
+	return &pb.CreateOrderResp{
+		OrderId: 0,
+	}, nil
+}
+
+func ApplyOrderID(ctx context.Context, req *pb.ApplyOrderIDReq) (*pb.ApplyOrderIDResp, error) {
+	id := utils.GenerateOrderID(req.UserId)
+	return &pb.ApplyOrderIDResp{
+		OrderId: id,
+		Result:  true,
+	}, nil
 }

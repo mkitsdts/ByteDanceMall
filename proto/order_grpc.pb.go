@@ -22,7 +22,9 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	OrderService_ListOrder_FullMethodName      = "/order.OrderService/ListOrder"
-	OrderService_GetOrderStates_FullMethodName = "/order.OrderService/GetOrderStates"
+	OrderService_GetOrderStatus_FullMethodName = "/order.OrderService/GetOrderStatus"
+	OrderService_ApplyOrderID_FullMethodName   = "/order.OrderService/ApplyOrderID"
+	OrderService_CreateOrder_FullMethodName    = "/order.OrderService/CreateOrder"
 )
 
 // OrderServiceClient is the client API for OrderService service.
@@ -30,7 +32,9 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrderServiceClient interface {
 	ListOrder(ctx context.Context, in *ListOrderReq, opts ...grpc.CallOption) (*ListOrderResp, error)
-	GetOrderStates(ctx context.Context, in *GetOrderStatesReq, opts ...grpc.CallOption) (*GetOrderStatesResp, error)
+	GetOrderStatus(ctx context.Context, in *GetOrderStatusReq, opts ...grpc.CallOption) (*GetOrderStatusResp, error)
+	ApplyOrderID(ctx context.Context, in *ApplyOrderIDReq, opts ...grpc.CallOption) (*ApplyOrderIDResp, error)
+	CreateOrder(ctx context.Context, in *CreateOrderReq, opts ...grpc.CallOption) (*CreateOrderResp, error)
 }
 
 type orderServiceClient struct {
@@ -51,10 +55,30 @@ func (c *orderServiceClient) ListOrder(ctx context.Context, in *ListOrderReq, op
 	return out, nil
 }
 
-func (c *orderServiceClient) GetOrderStates(ctx context.Context, in *GetOrderStatesReq, opts ...grpc.CallOption) (*GetOrderStatesResp, error) {
+func (c *orderServiceClient) GetOrderStatus(ctx context.Context, in *GetOrderStatusReq, opts ...grpc.CallOption) (*GetOrderStatusResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetOrderStatesResp)
-	err := c.cc.Invoke(ctx, OrderService_GetOrderStates_FullMethodName, in, out, cOpts...)
+	out := new(GetOrderStatusResp)
+	err := c.cc.Invoke(ctx, OrderService_GetOrderStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderServiceClient) ApplyOrderID(ctx context.Context, in *ApplyOrderIDReq, opts ...grpc.CallOption) (*ApplyOrderIDResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ApplyOrderIDResp)
+	err := c.cc.Invoke(ctx, OrderService_ApplyOrderID_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderServiceClient) CreateOrder(ctx context.Context, in *CreateOrderReq, opts ...grpc.CallOption) (*CreateOrderResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateOrderResp)
+	err := c.cc.Invoke(ctx, OrderService_CreateOrder_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +90,9 @@ func (c *orderServiceClient) GetOrderStates(ctx context.Context, in *GetOrderSta
 // for forward compatibility.
 type OrderServiceServer interface {
 	ListOrder(context.Context, *ListOrderReq) (*ListOrderResp, error)
-	GetOrderStates(context.Context, *GetOrderStatesReq) (*GetOrderStatesResp, error)
+	GetOrderStatus(context.Context, *GetOrderStatusReq) (*GetOrderStatusResp, error)
+	ApplyOrderID(context.Context, *ApplyOrderIDReq) (*ApplyOrderIDResp, error)
+	CreateOrder(context.Context, *CreateOrderReq) (*CreateOrderResp, error)
 	mustEmbedUnimplementedOrderServiceServer()
 }
 
@@ -80,8 +106,14 @@ type UnimplementedOrderServiceServer struct{}
 func (UnimplementedOrderServiceServer) ListOrder(context.Context, *ListOrderReq) (*ListOrderResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListOrder not implemented")
 }
-func (UnimplementedOrderServiceServer) GetOrderStates(context.Context, *GetOrderStatesReq) (*GetOrderStatesResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetOrderStates not implemented")
+func (UnimplementedOrderServiceServer) GetOrderStatus(context.Context, *GetOrderStatusReq) (*GetOrderStatusResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOrderStatus not implemented")
+}
+func (UnimplementedOrderServiceServer) ApplyOrderID(context.Context, *ApplyOrderIDReq) (*ApplyOrderIDResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ApplyOrderID not implemented")
+}
+func (UnimplementedOrderServiceServer) CreateOrder(context.Context, *CreateOrderReq) (*CreateOrderResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateOrder not implemented")
 }
 func (UnimplementedOrderServiceServer) mustEmbedUnimplementedOrderServiceServer() {}
 func (UnimplementedOrderServiceServer) testEmbeddedByValue()                      {}
@@ -122,20 +154,56 @@ func _OrderService_ListOrder_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrderService_GetOrderStates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetOrderStatesReq)
+func _OrderService_GetOrderStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOrderStatusReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrderServiceServer).GetOrderStates(ctx, in)
+		return srv.(OrderServiceServer).GetOrderStatus(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: OrderService_GetOrderStates_FullMethodName,
+		FullMethod: OrderService_GetOrderStatus_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrderServiceServer).GetOrderStates(ctx, req.(*GetOrderStatesReq))
+		return srv.(OrderServiceServer).GetOrderStatus(ctx, req.(*GetOrderStatusReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrderService_ApplyOrderID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ApplyOrderIDReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).ApplyOrderID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_ApplyOrderID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).ApplyOrderID(ctx, req.(*ApplyOrderIDReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrderService_CreateOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateOrderReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).CreateOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_CreateOrder_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).CreateOrder(ctx, req.(*CreateOrderReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -152,8 +220,16 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _OrderService_ListOrder_Handler,
 		},
 		{
-			MethodName: "GetOrderStates",
-			Handler:    _OrderService_GetOrderStates_Handler,
+			MethodName: "GetOrderStatus",
+			Handler:    _OrderService_GetOrderStatus_Handler,
+		},
+		{
+			MethodName: "ApplyOrderID",
+			Handler:    _OrderService_ApplyOrderID_Handler,
+		},
+		{
+			MethodName: "CreateOrder",
+			Handler:    _OrderService_CreateOrder_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
