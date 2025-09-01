@@ -17,7 +17,7 @@ type Database struct {
 	Slaves []*gorm.DB
 }
 
-var db *Database
+var db *Database = &Database{}
 
 func DB() *gorm.DB {
 	return db.Master
@@ -32,7 +32,7 @@ func NewDatabase(models ...any) error {
 		config.Cfg.Database.Port,
 		config.Cfg.Database.Name,
 	)
-
+	maxRetries := 5
 	master, err := gorm.Open(mysql.Open(masterDSN), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
@@ -40,18 +40,23 @@ func NewDatabase(models ...any) error {
 		return NewDatabase()
 	}
 
+	for _, model := range models {
+		for i := range maxRetries {
+			if err := migrate(master, model); err == nil {
+				break
+			}
+			time.Sleep(10 << i * time.Millisecond)
+			if i == maxRetries-1 {
+				return fmt.Errorf("failed to auto migrate model %v: %w", model, err)
+			}
+		}
+	}
+	slog.Info("Database connected successfully")
 	db.Master = master
 
-	maxRetries := 5
-
 	if len(config.Cfg.Database.Slaves) == 0 {
-
-		for range maxRetries {
-			if err := migrate(master, models); err == nil {
-				return nil
-			}
-			time.Sleep(time.Second * 2)
-		}
+		slog.Info("No slave databases configured, skipping read-write splitting")
+		return nil
 	}
 
 	// 准备从库DSN

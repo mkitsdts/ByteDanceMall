@@ -5,5 +5,5 @@ const (
 	PAID            = 1
 	SHIPPED         = 2
 	DELIVERED       = 3
-	CANCELLED       = 4
+	CANCELED        = 4
 )

@@ -29,7 +29,7 @@ func main() {
 		return
 	}
 	// 创建数据库连接
-	if err := pkg.NewDatabase(); err != nil {
+	if err := pkg.NewDatabase(&service.Order{}); err != nil {
 		slog.Error("Failed to connect to database", "error", err)
 		return
 	}
@@ -56,10 +56,10 @@ func main() {
 	// 注册reflection服务，便于使用grpcurl等工具调试
 	reflection.Register(s)
 
-	fmt.Printf("用户服务启动成功，监听端口: %d", port)
+	fmt.Println("用户服务启动成功，监听端口:", port)
 
 	// 启动服务
 	if err := s.Serve(lis); err != nil {
-		fmt.Printf("Failed to serve: %v", err)
+		fmt.Println("Failed to serve:", err)
 	}
 }

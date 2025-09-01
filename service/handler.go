@@ -7,6 +7,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
+	"time"
 )
 
 func (s *OrderService) ListOrder(ctx context.Context, req *pb.ListOrderReq) (*pb.ListOrderResp, error) {
@@ -38,7 +40,7 @@ func (s *OrderService) ListOrder(ctx context.Context, req *pb.ListOrderReq) (*pb
 	tx := pkg.DB().Begin()
 
 	maxRetries := 5
-	for i := 0; i < maxRetries; i++ {
+	for i := range maxRetries {
 		if err := tx.Where("user_id = ?", id).Find(&orders.Items).Error; err == nil {
 			break
 		}
@@ -80,7 +82,7 @@ func (s *OrderService) GetOrderStatus(ctx context.Context, req *pb.GetOrderStatu
 
 	maxRetries := 5
 	for i := range maxRetries {
-		if err := tx.Where("id = ?", req.OrderId).First(&order).Error; err == nil {
+		if err := tx.Where("order_id = ?", req.OrderId).First(&order).Error; err == nil {
 			return &pb.GetOrderStatusResp{
 				OrderStatus: order.Status,
 			}, nil
@@ -111,24 +113,40 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *pb.CreateOrderReq) 
 			Cost:      req.Cost,
 			Status:    WAITING_PAYMENT,
 		}).Error; err == nil {
-			if err = tx.Commit().Error; err != nil {
+			if err = tx.Commit().Error; err == nil {
 				return &pb.CreateOrderResp{
-					Result: false,
-				}, err
-			} else {
-				continue
+					Result: true,
+				}, nil
 			}
+			time.Sleep(10 << i * time.Millisecond)
 		}
 		if i == maxRetries-1 {
 			tx.Rollback()
 			return &pb.CreateOrderResp{
-				OrderId: 0,
+				Result: false,
 			}, err
 		}
 	}
-	tx.Commit()
+	if err = tx.Commit().Error; err != nil {
+		return &pb.CreateOrderResp{
+			Result: false,
+		}, err
+	}
+	go func() {
+		time.AfterFunc(5*time.Minute, func() {
+			for i := range maxRetries {
+				if err := pkg.DB().Model(&Order{}).Where("order_id = ? and status = ?", req.OrderId, WAITING_PAYMENT).Update("status", CANCELED).Error; err == nil {
+					return
+				}
+				time.Sleep(10 << i * time.Millisecond)
+				if i == maxRetries-1 {
+					slog.Error("Failed to auto-cancel order after retries", "order_id", req.OrderId)
+				}
+			}
+		})
+	}()
 	return &pb.CreateOrderResp{
-		OrderId: 0,
+		Result: true,
 	}, nil
 }
 

@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-var Cfg *Config
+var Cfg *Config = &Config{}
 
 type DatabaseConfig struct {
 	Master       string   `json:"master"`
@@ -63,7 +63,7 @@ func Init() error {
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&Cfg); err != nil {
+	if err := decoder.Decode(Cfg); err != nil {
 		return err
 	}
 

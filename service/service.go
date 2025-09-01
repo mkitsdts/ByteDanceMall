@@ -14,6 +14,6 @@ type OrderService struct {
 // 创建一个新的订单服务实例
 func NewOrderService() *OrderService {
 	var s OrderService
-	s.LoopUpdateOrderStatus()
+	go s.LoopUpdateOrderStatus()
 	return &s
 }

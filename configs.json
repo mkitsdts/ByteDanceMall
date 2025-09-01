@@ -1,15 +1,45 @@
 {
-    "sql_config": {
-        "host": "localhost",
-        "port": "3306",
-        "user": "root",
-        "password": "root",
-        "database": "order"
+    "server": {
+        "port": 14803
     },
-    "redis_config": {
-        "address": [
-            "localhost:6379"
+    "database": {
+        "master": "localhost",
+        "slaves": [],
+        "port": 3306,
+        "username": "user",
+        "password": "password",
+        "name": "order"
+    },
+    "redis": {
+        "host": [
+            "localhost"
         ],
-        "password": "root"
+        "port": 6379
+    },
+    "kafka_writer": {
+        "host": [
+            "localhost"
+        ],
+        "port": "9092",
+        "username": "",
+        "password": "",
+        "topic": [
+            "gomall-order-status",
+            "gomall-order-status-dmq"
+        ],
+        "group_id": "1"
+    },
+    "kafka_reader": {
+        "host": [
+            "localhost"
+        ],
+        "port": "9092",
+        "username": "root",
+        "password": "root",
+        "topic": [
+            "gomall-order-status",
+            "gomall-order-status-dmq"
+        ],
+        "group_id": "1"
     }
 }
