@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytedancemall/auth/pkg/redis"
 	pb "bytedancemall/auth/proto"
 	"bytedancemall/auth/service"
 	"fmt"
@@ -13,6 +14,8 @@ import (
 func main() {
 
 	port := 14801
+
+	redis.InitRedis()
 
 	// 设置监听端口
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))

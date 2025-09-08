@@ -38,7 +38,7 @@ func generateDynamicKey(userId uint64, salt string) []byte {
 	return h.Sum(nil)
 }
 
-func GenerateToken(userId uint64) (string, error) {
+func GenerateToken(userId uint64, minutes int64) (string, error) {
 	// 生成随机盐值
 	salt, err := generateSalt()
 	if err != nil {
@@ -52,7 +52,7 @@ func GenerateToken(userId uint64) (string, error) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(5 * 24 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(minutes) * time.Minute)),
 		},
 	}
 
