@@ -21,16 +21,20 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuthService_DeliverTokenByRPC_FullMethodName = "/auth.AuthService/DeliverTokenByRPC"
-	AuthService_VerifyTokenByRPC_FullMethodName  = "/auth.AuthService/VerifyTokenByRPC"
+	AuthService_DeliverToken_FullMethodName       = "/auth.AuthService/DeliverToken"
+	AuthService_VerifyToken_FullMethodName        = "/auth.AuthService/VerifyToken"
+	AuthService_RefreshToken_FullMethodName       = "/auth.AuthService/RefreshToken"
+	AuthService_RemoveRefreshToken_FullMethodName = "/auth.AuthService/RemoveRefreshToken"
 )
 
 // AuthServiceClient is the client API for AuthService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthServiceClient interface {
-	DeliverTokenByRPC(ctx context.Context, in *DeliverTokenReq, opts ...grpc.CallOption) (*DeliveryTokenResp, error)
-	VerifyTokenByRPC(ctx context.Context, in *VerifyTokenReq, opts ...grpc.CallOption) (*VerifyTokenResp, error)
+	DeliverToken(ctx context.Context, in *DeliverTokenReq, opts ...grpc.CallOption) (*DeliveryTokenResp, error)
+	VerifyToken(ctx context.Context, in *VerifyTokenReq, opts ...grpc.CallOption) (*VerifyTokenResp, error)
+	RefreshToken(ctx context.Context, in *RefreshTokenReq, opts ...grpc.CallOption) (*RefreshTokenResp, error)
+	RemoveRefreshToken(ctx context.Context, in *RemoveRefreshTokenReq, opts ...grpc.CallOption) (*RemoveRefreshTokenResp, error)
 }
 
 type authServiceClient struct {
@@ -41,20 +45,40 @@ func NewAuthServiceClient(cc grpc.ClientConnInterface) AuthServiceClient {
 	return &authServiceClient{cc}
 }
 
-func (c *authServiceClient) DeliverTokenByRPC(ctx context.Context, in *DeliverTokenReq, opts ...grpc.CallOption) (*DeliveryTokenResp, error) {
+func (c *authServiceClient) DeliverToken(ctx context.Context, in *DeliverTokenReq, opts ...grpc.CallOption) (*DeliveryTokenResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeliveryTokenResp)
-	err := c.cc.Invoke(ctx, AuthService_DeliverTokenByRPC_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, AuthService_DeliverToken_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *authServiceClient) VerifyTokenByRPC(ctx context.Context, in *VerifyTokenReq, opts ...grpc.CallOption) (*VerifyTokenResp, error) {
+func (c *authServiceClient) VerifyToken(ctx context.Context, in *VerifyTokenReq, opts ...grpc.CallOption) (*VerifyTokenResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(VerifyTokenResp)
-	err := c.cc.Invoke(ctx, AuthService_VerifyTokenByRPC_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, AuthService_VerifyToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) RefreshToken(ctx context.Context, in *RefreshTokenReq, opts ...grpc.CallOption) (*RefreshTokenResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RefreshTokenResp)
+	err := c.cc.Invoke(ctx, AuthService_RefreshToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) RemoveRefreshToken(ctx context.Context, in *RemoveRefreshTokenReq, opts ...grpc.CallOption) (*RemoveRefreshTokenResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RemoveRefreshTokenResp)
+	err := c.cc.Invoke(ctx, AuthService_RemoveRefreshToken_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -65,8 +89,10 @@ func (c *authServiceClient) VerifyTokenByRPC(ctx context.Context, in *VerifyToke
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
 type AuthServiceServer interface {
-	DeliverTokenByRPC(context.Context, *DeliverTokenReq) (*DeliveryTokenResp, error)
-	VerifyTokenByRPC(context.Context, *VerifyTokenReq) (*VerifyTokenResp, error)
+	DeliverToken(context.Context, *DeliverTokenReq) (*DeliveryTokenResp, error)
+	VerifyToken(context.Context, *VerifyTokenReq) (*VerifyTokenResp, error)
+	RefreshToken(context.Context, *RefreshTokenReq) (*RefreshTokenResp, error)
+	RemoveRefreshToken(context.Context, *RemoveRefreshTokenReq) (*RemoveRefreshTokenResp, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -77,11 +103,17 @@ type AuthServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAuthServiceServer struct{}
 
-func (UnimplementedAuthServiceServer) DeliverTokenByRPC(context.Context, *DeliverTokenReq) (*DeliveryTokenResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeliverTokenByRPC not implemented")
+func (UnimplementedAuthServiceServer) DeliverToken(context.Context, *DeliverTokenReq) (*DeliveryTokenResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeliverToken not implemented")
 }
-func (UnimplementedAuthServiceServer) VerifyTokenByRPC(context.Context, *VerifyTokenReq) (*VerifyTokenResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VerifyTokenByRPC not implemented")
+func (UnimplementedAuthServiceServer) VerifyToken(context.Context, *VerifyTokenReq) (*VerifyTokenResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyToken not implemented")
+}
+func (UnimplementedAuthServiceServer) RefreshToken(context.Context, *RefreshTokenReq) (*RefreshTokenResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RefreshToken not implemented")
+}
+func (UnimplementedAuthServiceServer) RemoveRefreshToken(context.Context, *RemoveRefreshTokenReq) (*RemoveRefreshTokenResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveRefreshToken not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 func (UnimplementedAuthServiceServer) testEmbeddedByValue()                     {}
@@ -104,38 +136,74 @@ func RegisterAuthServiceServer(s grpc.ServiceRegistrar, srv AuthServiceServer) {
 	s.RegisterService(&AuthService_ServiceDesc, srv)
 }
 
-func _AuthService_DeliverTokenByRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AuthService_DeliverToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeliverTokenReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthServiceServer).DeliverTokenByRPC(ctx, in)
+		return srv.(AuthServiceServer).DeliverToken(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AuthService_DeliverTokenByRPC_FullMethodName,
+		FullMethod: AuthService_DeliverToken_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).DeliverTokenByRPC(ctx, req.(*DeliverTokenReq))
+		return srv.(AuthServiceServer).DeliverToken(ctx, req.(*DeliverTokenReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthService_VerifyTokenByRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AuthService_VerifyToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(VerifyTokenReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthServiceServer).VerifyTokenByRPC(ctx, in)
+		return srv.(AuthServiceServer).VerifyToken(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AuthService_VerifyTokenByRPC_FullMethodName,
+		FullMethod: AuthService_VerifyToken_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).VerifyTokenByRPC(ctx, req.(*VerifyTokenReq))
+		return srv.(AuthServiceServer).VerifyToken(ctx, req.(*VerifyTokenReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_RefreshToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefreshTokenReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).RefreshToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_RefreshToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).RefreshToken(ctx, req.(*RefreshTokenReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_RemoveRefreshToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveRefreshTokenReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).RemoveRefreshToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_RemoveRefreshToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).RemoveRefreshToken(ctx, req.(*RemoveRefreshTokenReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -148,12 +216,20 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AuthServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "DeliverTokenByRPC",
-			Handler:    _AuthService_DeliverTokenByRPC_Handler,
+			MethodName: "DeliverToken",
+			Handler:    _AuthService_DeliverToken_Handler,
 		},
 		{
-			MethodName: "VerifyTokenByRPC",
-			Handler:    _AuthService_VerifyTokenByRPC_Handler,
+			MethodName: "VerifyToken",
+			Handler:    _AuthService_VerifyToken_Handler,
+		},
+		{
+			MethodName: "RefreshToken",
+			Handler:    _AuthService_RefreshToken_Handler,
+		},
+		{
+			MethodName: "RemoveRefreshToken",
+			Handler:    _AuthService_RemoveRefreshToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
