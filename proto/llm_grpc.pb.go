@@ -21,16 +21,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	LLMService_FilterKeyWord_FullMethodName = "/llm.LLMService/FilterKeyWord"
-	LLMService_ChooseProduct_FullMethodName = "/llm.LLMService/ChooseProduct"
+	LLMService_IntelligentCustomer_FullMethodName = "/llm.LLMService/IntelligentCustomer"
+	LLMService_ShopAssistant_FullMethodName       = "/llm.LLMService/ShopAssistant"
 )
 
 // LLMServiceClient is the client API for LLMService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LLMServiceClient interface {
-	FilterKeyWord(ctx context.Context, in *FilterKeyWordReq, opts ...grpc.CallOption) (*FilterKeyWordResp, error)
-	ChooseProduct(ctx context.Context, in *ChooseProductReq, opts ...grpc.CallOption) (*ChooseProductResp, error)
+	IntelligentCustomer(ctx context.Context, in *QuestionReq, opts ...grpc.CallOption) (*CustomerAnswerResp, error)
+	ShopAssistant(ctx context.Context, in *QuestionReq, opts ...grpc.CallOption) (*AssistantAnswerResp, error)
 }
 
 type lLMServiceClient struct {
@@ -41,20 +41,20 @@ func NewLLMServiceClient(cc grpc.ClientConnInterface) LLMServiceClient {
 	return &lLMServiceClient{cc}
 }
 
-func (c *lLMServiceClient) FilterKeyWord(ctx context.Context, in *FilterKeyWordReq, opts ...grpc.CallOption) (*FilterKeyWordResp, error) {
+func (c *lLMServiceClient) IntelligentCustomer(ctx context.Context, in *QuestionReq, opts ...grpc.CallOption) (*CustomerAnswerResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(FilterKeyWordResp)
-	err := c.cc.Invoke(ctx, LLMService_FilterKeyWord_FullMethodName, in, out, cOpts...)
+	out := new(CustomerAnswerResp)
+	err := c.cc.Invoke(ctx, LLMService_IntelligentCustomer_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *lLMServiceClient) ChooseProduct(ctx context.Context, in *ChooseProductReq, opts ...grpc.CallOption) (*ChooseProductResp, error) {
+func (c *lLMServiceClient) ShopAssistant(ctx context.Context, in *QuestionReq, opts ...grpc.CallOption) (*AssistantAnswerResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ChooseProductResp)
-	err := c.cc.Invoke(ctx, LLMService_ChooseProduct_FullMethodName, in, out, cOpts...)
+	out := new(AssistantAnswerResp)
+	err := c.cc.Invoke(ctx, LLMService_ShopAssistant_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -65,8 +65,8 @@ func (c *lLMServiceClient) ChooseProduct(ctx context.Context, in *ChooseProductR
 // All implementations must embed UnimplementedLLMServiceServer
 // for forward compatibility.
 type LLMServiceServer interface {
-	FilterKeyWord(context.Context, *FilterKeyWordReq) (*FilterKeyWordResp, error)
-	ChooseProduct(context.Context, *ChooseProductReq) (*ChooseProductResp, error)
+	IntelligentCustomer(context.Context, *QuestionReq) (*CustomerAnswerResp, error)
+	ShopAssistant(context.Context, *QuestionReq) (*AssistantAnswerResp, error)
 	mustEmbedUnimplementedLLMServiceServer()
 }
 
@@ -77,11 +77,11 @@ type LLMServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedLLMServiceServer struct{}
 
-func (UnimplementedLLMServiceServer) FilterKeyWord(context.Context, *FilterKeyWordReq) (*FilterKeyWordResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FilterKeyWord not implemented")
+func (UnimplementedLLMServiceServer) IntelligentCustomer(context.Context, *QuestionReq) (*CustomerAnswerResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IntelligentCustomer not implemented")
 }
-func (UnimplementedLLMServiceServer) ChooseProduct(context.Context, *ChooseProductReq) (*ChooseProductResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ChooseProduct not implemented")
+func (UnimplementedLLMServiceServer) ShopAssistant(context.Context, *QuestionReq) (*AssistantAnswerResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ShopAssistant not implemented")
 }
 func (UnimplementedLLMServiceServer) mustEmbedUnimplementedLLMServiceServer() {}
 func (UnimplementedLLMServiceServer) testEmbeddedByValue()                    {}
@@ -104,38 +104,38 @@ func RegisterLLMServiceServer(s grpc.ServiceRegistrar, srv LLMServiceServer) {
 	s.RegisterService(&LLMService_ServiceDesc, srv)
 }
 
-func _LLMService_FilterKeyWord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FilterKeyWordReq)
+func _LLMService_IntelligentCustomer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuestionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(LLMServiceServer).FilterKeyWord(ctx, in)
+		return srv.(LLMServiceServer).IntelligentCustomer(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: LLMService_FilterKeyWord_FullMethodName,
+		FullMethod: LLMService_IntelligentCustomer_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LLMServiceServer).FilterKeyWord(ctx, req.(*FilterKeyWordReq))
+		return srv.(LLMServiceServer).IntelligentCustomer(ctx, req.(*QuestionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _LLMService_ChooseProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ChooseProductReq)
+func _LLMService_ShopAssistant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuestionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(LLMServiceServer).ChooseProduct(ctx, in)
+		return srv.(LLMServiceServer).ShopAssistant(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: LLMService_ChooseProduct_FullMethodName,
+		FullMethod: LLMService_ShopAssistant_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LLMServiceServer).ChooseProduct(ctx, req.(*ChooseProductReq))
+		return srv.(LLMServiceServer).ShopAssistant(ctx, req.(*QuestionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -148,12 +148,12 @@ var LLMService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*LLMServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "FilterKeyWord",
-			Handler:    _LLMService_FilterKeyWord_Handler,
+			MethodName: "IntelligentCustomer",
+			Handler:    _LLMService_IntelligentCustomer_Handler,
 		},
 		{
-			MethodName: "ChooseProduct",
-			Handler:    _LLMService_ChooseProduct_Handler,
+			MethodName: "ShopAssistant",
+			Handler:    _LLMService_ShopAssistant_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

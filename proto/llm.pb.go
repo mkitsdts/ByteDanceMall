@@ -23,27 +23,27 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type FilterKeyWordReq struct {
+type QuestionReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Keyword       string                 `protobuf:"bytes,1,opt,name=keyword,proto3" json:"keyword,omitempty"`
+	Question      string                 `protobuf:"bytes,1,opt,name=question,proto3" json:"question,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *FilterKeyWordReq) Reset() {
-	*x = FilterKeyWordReq{}
+func (x *QuestionReq) Reset() {
+	*x = QuestionReq{}
 	mi := &file_llm_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *FilterKeyWordReq) String() string {
+func (x *QuestionReq) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*FilterKeyWordReq) ProtoMessage() {}
+func (*QuestionReq) ProtoMessage() {}
 
-func (x *FilterKeyWordReq) ProtoReflect() protoreflect.Message {
+func (x *QuestionReq) ProtoReflect() protoreflect.Message {
 	mi := &file_llm_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -55,39 +55,40 @@ func (x *FilterKeyWordReq) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use FilterKeyWordReq.ProtoReflect.Descriptor instead.
-func (*FilterKeyWordReq) Descriptor() ([]byte, []int) {
+// Deprecated: Use QuestionReq.ProtoReflect.Descriptor instead.
+func (*QuestionReq) Descriptor() ([]byte, []int) {
 	return file_llm_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *FilterKeyWordReq) GetKeyword() string {
+func (x *QuestionReq) GetQuestion() string {
 	if x != nil {
-		return x.Keyword
+		return x.Question
 	}
 	return ""
 }
 
-type FilterKeyWordResp struct {
+type CustomerAnswerResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Result        string                 `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
+	Answer        string                 `protobuf:"bytes,1,opt,name=answer,proto3" json:"answer,omitempty"`
+	Result        bool                   `protobuf:"varint,2,opt,name=result,proto3" json:"result,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *FilterKeyWordResp) Reset() {
-	*x = FilterKeyWordResp{}
+func (x *CustomerAnswerResp) Reset() {
+	*x = CustomerAnswerResp{}
 	mi := &file_llm_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *FilterKeyWordResp) String() string {
+func (x *CustomerAnswerResp) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*FilterKeyWordResp) ProtoMessage() {}
+func (*CustomerAnswerResp) ProtoMessage() {}
 
-func (x *FilterKeyWordResp) ProtoReflect() protoreflect.Message {
+func (x *CustomerAnswerResp) ProtoReflect() protoreflect.Message {
 	mi := &file_llm_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -99,42 +100,48 @@ func (x *FilterKeyWordResp) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use FilterKeyWordResp.ProtoReflect.Descriptor instead.
-func (*FilterKeyWordResp) Descriptor() ([]byte, []int) {
+// Deprecated: Use CustomerAnswerResp.ProtoReflect.Descriptor instead.
+func (*CustomerAnswerResp) Descriptor() ([]byte, []int) {
 	return file_llm_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *FilterKeyWordResp) GetResult() string {
+func (x *CustomerAnswerResp) GetAnswer() string {
+	if x != nil {
+		return x.Answer
+	}
+	return ""
+}
+
+func (x *CustomerAnswerResp) GetResult() bool {
 	if x != nil {
 		return x.Result
 	}
-	return ""
+	return false
 }
 
-type Product struct {
+type AssistantAnswerResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Describe      string                 `protobuf:"bytes,1,opt,name=Describe,proto3" json:"Describe,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=Name,proto3" json:"Name,omitempty"`
-	Quantity      uint32                 `protobuf:"varint,3,opt,name=quantity,proto3" json:"quantity,omitempty"`
-	Id            uint32                 `protobuf:"varint,4,opt,name=id,proto3" json:"id,omitempty"`
+	Answer        string                 `protobuf:"bytes,1,opt,name=answer,proto3" json:"answer,omitempty"`
+	ProductIds    []uint64               `protobuf:"varint,2,rep,packed,name=product_ids,json=productIds,proto3" json:"product_ids,omitempty"`
+	Result        bool                   `protobuf:"varint,3,opt,name=result,proto3" json:"result,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Product) Reset() {
-	*x = Product{}
+func (x *AssistantAnswerResp) Reset() {
+	*x = AssistantAnswerResp{}
 	mi := &file_llm_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Product) String() string {
+func (x *AssistantAnswerResp) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Product) ProtoMessage() {}
+func (*AssistantAnswerResp) ProtoMessage() {}
 
-func (x *Product) ProtoReflect() protoreflect.Message {
+func (x *AssistantAnswerResp) ProtoReflect() protoreflect.Message {
 	mi := &file_llm_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -146,150 +153,51 @@ func (x *Product) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Product.ProtoReflect.Descriptor instead.
-func (*Product) Descriptor() ([]byte, []int) {
+// Deprecated: Use AssistantAnswerResp.ProtoReflect.Descriptor instead.
+func (*AssistantAnswerResp) Descriptor() ([]byte, []int) {
 	return file_llm_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *Product) GetDescribe() string {
+func (x *AssistantAnswerResp) GetAnswer() string {
 	if x != nil {
-		return x.Describe
+		return x.Answer
 	}
 	return ""
 }
 
-func (x *Product) GetName() string {
+func (x *AssistantAnswerResp) GetProductIds() []uint64 {
 	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *Product) GetQuantity() uint32 {
-	if x != nil {
-		return x.Quantity
-	}
-	return 0
-}
-
-func (x *Product) GetId() uint32 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-type ChooseProductReq struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ProductInfo   []*Product             `protobuf:"bytes,1,rep,name=product_info,json=productInfo,proto3" json:"product_info,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ChooseProductReq) Reset() {
-	*x = ChooseProductReq{}
-	mi := &file_llm_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ChooseProductReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ChooseProductReq) ProtoMessage() {}
-
-func (x *ChooseProductReq) ProtoReflect() protoreflect.Message {
-	mi := &file_llm_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ChooseProductReq.ProtoReflect.Descriptor instead.
-func (*ChooseProductReq) Descriptor() ([]byte, []int) {
-	return file_llm_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *ChooseProductReq) GetProductInfo() []*Product {
-	if x != nil {
-		return x.ProductInfo
+		return x.ProductIds
 	}
 	return nil
 }
 
-type ChooseProductResp struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ProductId     []uint32               `protobuf:"varint,1,rep,packed,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ChooseProductResp) Reset() {
-	*x = ChooseProductResp{}
-	mi := &file_llm_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ChooseProductResp) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ChooseProductResp) ProtoMessage() {}
-
-func (x *ChooseProductResp) ProtoReflect() protoreflect.Message {
-	mi := &file_llm_proto_msgTypes[4]
+func (x *AssistantAnswerResp) GetResult() bool {
 	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
+		return x.Result
 	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ChooseProductResp.ProtoReflect.Descriptor instead.
-func (*ChooseProductResp) Descriptor() ([]byte, []int) {
-	return file_llm_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *ChooseProductResp) GetProductId() []uint32 {
-	if x != nil {
-		return x.ProductId
-	}
-	return nil
+	return false
 }
 
 var File_llm_proto protoreflect.FileDescriptor
 
 const file_llm_proto_rawDesc = "" +
 	"\n" +
-	"\tllm.proto\x12\x03llm\",\n" +
-	"\x10FilterKeyWordReq\x12\x18\n" +
-	"\akeyword\x18\x01 \x01(\tR\akeyword\"+\n" +
-	"\x11FilterKeyWordResp\x12\x16\n" +
-	"\x06result\x18\x01 \x01(\tR\x06result\"e\n" +
-	"\aProduct\x12\x1a\n" +
-	"\bDescribe\x18\x01 \x01(\tR\bDescribe\x12\x12\n" +
-	"\x04Name\x18\x02 \x01(\tR\x04Name\x12\x1a\n" +
-	"\bquantity\x18\x03 \x01(\rR\bquantity\x12\x0e\n" +
-	"\x02id\x18\x04 \x01(\rR\x02id\"C\n" +
-	"\x10ChooseProductReq\x12/\n" +
-	"\fproduct_info\x18\x01 \x03(\v2\f.llm.ProductR\vproductInfo\"2\n" +
-	"\x11ChooseProductResp\x12\x1d\n" +
+	"\tllm.proto\x12\x03llm\")\n" +
+	"\vQuestionReq\x12\x1a\n" +
+	"\bquestion\x18\x01 \x01(\tR\bquestion\"D\n" +
+	"\x12CustomerAnswerResp\x12\x16\n" +
+	"\x06answer\x18\x01 \x01(\tR\x06answer\x12\x16\n" +
+	"\x06result\x18\x02 \x01(\bR\x06result\"f\n" +
+	"\x13AssistantAnswerResp\x12\x16\n" +
+	"\x06answer\x18\x01 \x01(\tR\x06answer\x12\x1f\n" +
+	"\vproduct_ids\x18\x02 \x03(\x04R\n" +
+	"productIds\x12\x16\n" +
+	"\x06result\x18\x03 \x01(\bR\x06result2\x8f\x01\n" +
 	"\n" +
-	"product_id\x18\x01 \x03(\rR\tproductId2\x90\x01\n" +
-	"\n" +
-	"LLMService\x12@\n" +
-	"\rFilterKeyWord\x12\x15.llm.FilterKeyWordReq\x1a\x16.llm.FilterKeyWordResp\"\x00\x12@\n" +
-	"\rChooseProduct\x12\x15.llm.ChooseProductReq\x1a\x16.llm.ChooseProductResp\"\x00B\x06Z\x04/llmb\x06proto3"
+	"LLMService\x12B\n" +
+	"\x13IntelligentCustomer\x12\x10.llm.QuestionReq\x1a\x17.llm.CustomerAnswerResp\"\x00\x12=\n" +
+	"\rShopAssistant\x12\x10.llm.QuestionReq\x1a\x18.llm.AssistantAnswerResp\"\x00B\x06Z\x04/llmb\x06proto3"
 
 var (
 	file_llm_proto_rawDescOnce sync.Once
@@ -303,25 +211,22 @@ func file_llm_proto_rawDescGZIP() []byte {
 	return file_llm_proto_rawDescData
 }
 
-var file_llm_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_llm_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_llm_proto_goTypes = []any{
-	(*FilterKeyWordReq)(nil),  // 0: llm.FilterKeyWordReq
-	(*FilterKeyWordResp)(nil), // 1: llm.FilterKeyWordResp
-	(*Product)(nil),           // 2: llm.Product
-	(*ChooseProductReq)(nil),  // 3: llm.ChooseProductReq
-	(*ChooseProductResp)(nil), // 4: llm.ChooseProductResp
+	(*QuestionReq)(nil),         // 0: llm.QuestionReq
+	(*CustomerAnswerResp)(nil),  // 1: llm.CustomerAnswerResp
+	(*AssistantAnswerResp)(nil), // 2: llm.AssistantAnswerResp
 }
 var file_llm_proto_depIdxs = []int32{
-	2, // 0: llm.ChooseProductReq.product_info:type_name -> llm.Product
-	0, // 1: llm.LLMService.FilterKeyWord:input_type -> llm.FilterKeyWordReq
-	3, // 2: llm.LLMService.ChooseProduct:input_type -> llm.ChooseProductReq
-	1, // 3: llm.LLMService.FilterKeyWord:output_type -> llm.FilterKeyWordResp
-	4, // 4: llm.LLMService.ChooseProduct:output_type -> llm.ChooseProductResp
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0, // 0: llm.LLMService.IntelligentCustomer:input_type -> llm.QuestionReq
+	0, // 1: llm.LLMService.ShopAssistant:input_type -> llm.QuestionReq
+	1, // 2: llm.LLMService.IntelligentCustomer:output_type -> llm.CustomerAnswerResp
+	2, // 3: llm.LLMService.ShopAssistant:output_type -> llm.AssistantAnswerResp
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for extension type_name
+	0, // [0:0] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_llm_proto_init() }
@@ -335,7 +240,7 @@ func file_llm_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_llm_proto_rawDesc), len(file_llm_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

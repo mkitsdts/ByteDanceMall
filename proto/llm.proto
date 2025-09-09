@@ -7,21 +7,21 @@ package llm;
 option go_package = "/llm";
 
 service LLMService {
-  rpc Chat(ChatReq) returns (AnswerResp) {}
+  rpc IntelligentCustomer(QuestionReq) returns (CustomerAnswerResp) {}
+  rpc ShopAssistant(QuestionReq) returns (AssistantAnswerResp) {}
 }
 
-message ChatReq {
-  string keyword = 1;
+message QuestionReq {
+  string question = 1;
 }
 
-message AnswerResp {
-  int8 result = 1;
-  Product product = 2;
+message CustomerAnswerResp {
+  string answer = 1;
+  bool result = 2;
 }
 
-message Product {
-  string Describe = 1;
-  string Name = 2;
-  uint32 quantity = 3;
-  uint32 id = 4;
+message AssistantAnswerResp {
+  string answer = 1;
+  repeated uint64 product_ids = 2;
+  bool result = 3;
 }
