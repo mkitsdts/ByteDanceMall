@@ -19,6 +19,17 @@ func (s *AuthService) DeliverToken(ctx context.Context, req *pb.DeliverTokenReq)
 	if err != nil {
 		return &pb.DeliveryTokenResp{Result: false}, err
 	}
+	for i := range 3 {
+		_, err := redis.GetCLI().Set(ctx, "refresh_token:"+refreshToken, fmt.Sprint(req.UserId), time.Hour*24*30).Result()
+		if err == nil {
+			break
+		}
+		time.Sleep(10 << i * time.Millisecond)
+		if i == 2 {
+			slog.Error("Redis SET error", "error", err)
+			return &pb.DeliveryTokenResp{Result: false}, err
+		}
+	}
 	slog.Info(fmt.Sprintf("Generated token for user %d: %s", req.UserId, token))
 	return &pb.DeliveryTokenResp{Token: token, RefreshToken: refreshToken, Result: true}, nil
 }
@@ -56,9 +67,9 @@ func (s *AuthService) RefreshToken(ctx context.Context, req *pb.RefreshTokenReq)
 		slog.Error("Redis GET error", "error", err)
 		return &pb.RefreshTokenResp{Result: false}, err
 	}
-	if val != "" {
-		slog.Info("Using cached refresh token", "token", val)
-		return &pb.RefreshTokenResp{Token: val, Result: true}, nil
+	if val == "" {
+		slog.Warn("Refresh token not found", "token", req.RefreshToken)
+		return &pb.RefreshTokenResp{Result: false}, nil
 	}
 	if claim, err := utils.ParseToken(req.RefreshToken); err == nil {
 		newToken, err := utils.GenerateToken(claim.UserId, 5)
@@ -70,7 +81,24 @@ func (s *AuthService) RefreshToken(ctx context.Context, req *pb.RefreshTokenReq)
 			slog.Warn("Refresh token user ID mismatch", "expected", val, "got", claim.UserId)
 			return &pb.RefreshTokenResp{Result: false}, nil
 		}
-		return &pb.RefreshTokenResp{Token: newToken, Result: true}, nil
+		if claim, err = utils.ParseToken(req.RefreshToken); err != nil {
+			return &pb.RefreshTokenResp{Result: false}, nil
+		}
+		if claim.ExpiresAt.Before(time.Now().Add(10 * time.Minute).UTC()) {
+			newFreshToken, err := utils.GenerateToken(claim.UserId, 60*24*30)
+			if err != nil {
+				slog.Error("Refresh token generation error", "error", err)
+				return &pb.RefreshTokenResp{Result: false}, err
+			}
+			_, err = cli.Set(ctx, refreshToken, fmt.Sprint(claim.UserId), time.Hour*24*30).Result()
+			if err != nil {
+				slog.Error("Redis SET error", "error", err)
+				return &pb.RefreshTokenResp{Result: false}, err
+			}
+			slog.Info("Refresh token renewed", "token", req.RefreshToken)
+			return &pb.RefreshTokenResp{Token: newToken, RefreshToken: newFreshToken, Result: true}, nil
+		}
+		return &pb.RefreshTokenResp{Token: newToken, RefreshToken: req.RefreshToken, Result: true}, nil
 	} else {
 		slog.Error("Refresh token parsing error", "error", err)
 		return &pb.RefreshTokenResp{Result: false}, nil
