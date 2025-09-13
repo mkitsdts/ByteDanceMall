@@ -26,7 +26,6 @@ const (
 	AuthService_RefreshToken_FullMethodName        = "/auth.AuthService/RefreshToken"
 	AuthService_RemoveRefreshToken_FullMethodName  = "/auth.AuthService/RemoveRefreshToken"
 	AuthService_ProlongRefreshToken_FullMethodName = "/auth.AuthService/ProlongRefreshToken"
-	AuthService_RecoverRefreshToken_FullMethodName = "/auth.AuthService/RecoverRefreshToken"
 )
 
 // AuthServiceClient is the client API for AuthService service.
@@ -38,7 +37,6 @@ type AuthServiceClient interface {
 	RefreshToken(ctx context.Context, in *RefreshTokenReq, opts ...grpc.CallOption) (*RefreshTokenResp, error)
 	RemoveRefreshToken(ctx context.Context, in *RemoveRefreshTokenReq, opts ...grpc.CallOption) (*RemoveRefreshTokenResp, error)
 	ProlongRefreshToken(ctx context.Context, in *ProlongRefreshTokenReq, opts ...grpc.CallOption) (*ProlongRefreshTokenResp, error)
-	RecoverRefreshToken(ctx context.Context, in *RecoverRefreshTokenReq, opts ...grpc.CallOption) (*RecoverRefreshTokenResp, error)
 }
 
 type authServiceClient struct {
@@ -99,16 +97,6 @@ func (c *authServiceClient) ProlongRefreshToken(ctx context.Context, in *Prolong
 	return out, nil
 }
 
-func (c *authServiceClient) RecoverRefreshToken(ctx context.Context, in *RecoverRefreshTokenReq, opts ...grpc.CallOption) (*RecoverRefreshTokenResp, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RecoverRefreshTokenResp)
-	err := c.cc.Invoke(ctx, AuthService_RecoverRefreshToken_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
@@ -118,7 +106,6 @@ type AuthServiceServer interface {
 	RefreshToken(context.Context, *RefreshTokenReq) (*RefreshTokenResp, error)
 	RemoveRefreshToken(context.Context, *RemoveRefreshTokenReq) (*RemoveRefreshTokenResp, error)
 	ProlongRefreshToken(context.Context, *ProlongRefreshTokenReq) (*ProlongRefreshTokenResp, error)
-	RecoverRefreshToken(context.Context, *RecoverRefreshTokenReq) (*RecoverRefreshTokenResp, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -143,9 +130,6 @@ func (UnimplementedAuthServiceServer) RemoveRefreshToken(context.Context, *Remov
 }
 func (UnimplementedAuthServiceServer) ProlongRefreshToken(context.Context, *ProlongRefreshTokenReq) (*ProlongRefreshTokenResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProlongRefreshToken not implemented")
-}
-func (UnimplementedAuthServiceServer) RecoverRefreshToken(context.Context, *RecoverRefreshTokenReq) (*RecoverRefreshTokenResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RecoverRefreshToken not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 func (UnimplementedAuthServiceServer) testEmbeddedByValue()                     {}
@@ -258,24 +242,6 @@ func _AuthService_ProlongRefreshToken_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthService_RecoverRefreshToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RecoverRefreshTokenReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).RecoverRefreshToken(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthService_RecoverRefreshToken_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).RecoverRefreshToken(ctx, req.(*RecoverRefreshTokenReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -302,10 +268,6 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ProlongRefreshToken",
 			Handler:    _AuthService_ProlongRefreshToken_Handler,
-		},
-		{
-			MethodName: "RecoverRefreshToken",
-			Handler:    _AuthService_RecoverRefreshToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
