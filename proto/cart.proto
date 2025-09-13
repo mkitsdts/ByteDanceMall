@@ -10,13 +10,13 @@ service CartService {
   rpc AddItem(AddItemReq) returns (AddItemResp) {}
   rpc GetCart(GetCartReq) returns (GetCartResp) {}
   rpc RemoveItem(RemoveItemReq) returns (RemoveItemResp) {}
+  rpc HasItem(HasItemReq) returns (HasItemResp) {}
 }
 
 // 请求参数
 message AddItemReq {
   uint64 user_id = 1;
   uint64 product_id = 2;
-  uint64 quantity = 3;
 }
 
 message AddItemResp {
@@ -25,11 +25,16 @@ message AddItemResp {
 
 message GetCartReq {
   uint64 user_id = 1;
-  uint64 page = 2;
+}
+
+message CartItem {
+  uint64 product_id = 1;
+  double origin_price = 2;
+  uint64 quantity = 3;
 }
 
 message GetCartResp {
-  repeated uint64 products_id = 1;
+  repeated CartItem items = 1;
   bool result = 2;
 }
 
@@ -40,4 +45,13 @@ message RemoveItemReq {
 
 message RemoveItemResp {
   bool result = 1;
+}
+
+message HasItemReq {
+  uint64 user_id = 1;
+  uint64 product_id = 2;
+}
+
+message HasItemResp {
+  bool has_item = 1;
 }
