@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytedancemall/cart/config"
+	"bytedancemall/cart/model"
 	"bytedancemall/cart/pkg"
 	pb "bytedancemall/cart/proto"
 	"bytedancemall/cart/service"
@@ -17,7 +18,7 @@ func main() {
 	port := 14804
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		fmt.Println("Failed to listen: %v", err)
+		fmt.Println("Failed to listen:", err)
 	}
 
 	// 创建gRPC服务器
@@ -26,12 +27,12 @@ func main() {
 	config.Init()
 
 	pkg.NewRedis()
-	pkg.NewDatabase()
+	pkg.NewDatabase(&model.CartItem{}, &model.ProductItem{})
 
 	// 创建并注册UserService
 	userService, err := service.NewCartService()
 	if err != nil {
-		fmt.Println("Failed to create user service: %v", err)
+		fmt.Println("Failed to create user service:", err)
 		return
 	}
 	pb.RegisterCartServiceServer(s, userService)

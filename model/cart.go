@@ -1,9 +1,14 @@
 package model
 
-// 购物车数据库表结构
-type CartItem struct {
-	UserId    uint64 `json:"id" gorm:"primaryKey;unique;column:user_id"`
-	ProductID uint64 `json:"product_id" gorm:"index"`
-	CreatedAt string `json:"created_at" gorm:"column:created_at"`
-	UpdatedAt string `json:"updated_at" gorm:"column:updated_at"`
+// redis 存储结构
+
+type Item struct {
+	ProductID   uint64  `json:"product_id"`
+	OriginPrice float64 `json:"origin_price"`
+	Quantity    uint64  `json:"quantity"`
+	Version     uint32  `json:"version"`
+}
+
+type Cart struct {
+	Items []Item `json:"items"`
 }

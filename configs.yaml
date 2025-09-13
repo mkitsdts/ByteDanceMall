@@ -1,0 +1,12 @@
+"database":
+    "host" : "localhost"
+    "port" : "3306"
+    "user" : "cart"
+    "password" : "cart"
+    "database" : "cart"
+    
+    
+"redis" : 
+    "address" : "localhost:6379"
+
+
