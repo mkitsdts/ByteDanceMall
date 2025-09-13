@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytedancemall/auth/pkg/redis"
+	rds "bytedancemall/auth/pkg/redis"
 	pb "bytedancemall/auth/proto"
 	"bytedancemall/auth/service"
 	"fmt"
@@ -15,12 +15,12 @@ func main() {
 
 	port := 14801
 
-	redis.InitRedis()
+	rds.InitRedis()
 
 	// 设置监听端口
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		fmt.Printf("Failed to listen: %v", err)
+		fmt.Println("Failed to listen:", err)
 	}
 
 	// 创建gRPC服务器
@@ -33,10 +33,10 @@ func main() {
 	// 注册reflection服务，便于使用grpcurl等工具调试
 	reflection.Register(s)
 
-	fmt.Printf("用户服务启动成功，监听端口: %d", port)
+	fmt.Println("用户服务启动成功，监听端口:", port)
 
 	// 启动服务
 	if err := s.Serve(lis); err != nil {
-		fmt.Printf("Failed to serve: %v", err)
+		fmt.Println("Failed to serve:", err)
 	}
 }
