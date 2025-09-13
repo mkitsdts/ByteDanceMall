@@ -130,6 +130,7 @@ func (x *DeliveryTokenResp) GetResult() bool {
 type VerifyTokenReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -167,6 +168,13 @@ func (*VerifyTokenReq) Descriptor() ([]byte, []int) {
 func (x *VerifyTokenReq) GetToken() string {
 	if x != nil {
 		return x.Token
+	}
+	return ""
+}
+
+func (x *VerifyTokenReq) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
 	}
 	return ""
 }
@@ -270,8 +278,7 @@ func (x *RefreshTokenReq) GetRefreshToken() string {
 type RefreshTokenResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	Result        bool                   `protobuf:"varint,3,opt,name=result,proto3" json:"result,omitempty"`
+	Result        bool                   `protobuf:"varint,2,opt,name=result,proto3" json:"result,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -309,13 +316,6 @@ func (*RefreshTokenResp) Descriptor() ([]byte, []int) {
 func (x *RefreshTokenResp) GetToken() string {
 	if x != nil {
 		return x.Token
-	}
-	return ""
-}
-
-func (x *RefreshTokenResp) GetRefreshToken() string {
-	if x != nil {
-		return x.RefreshToken
 	}
 	return ""
 }
@@ -415,6 +415,182 @@ func (x *RemoveRefreshTokenResp) GetResult() bool {
 	return false
 }
 
+type ProlongRefreshTokenReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProlongRefreshTokenReq) Reset() {
+	*x = ProlongRefreshTokenReq{}
+	mi := &file_auth_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProlongRefreshTokenReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProlongRefreshTokenReq) ProtoMessage() {}
+
+func (x *ProlongRefreshTokenReq) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProlongRefreshTokenReq.ProtoReflect.Descriptor instead.
+func (*ProlongRefreshTokenReq) Descriptor() ([]byte, []int) {
+	return file_auth_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ProlongRefreshTokenReq) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+type ProlongRefreshTokenResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Result        bool                   `protobuf:"varint,1,opt,name=result,proto3" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProlongRefreshTokenResp) Reset() {
+	*x = ProlongRefreshTokenResp{}
+	mi := &file_auth_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProlongRefreshTokenResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProlongRefreshTokenResp) ProtoMessage() {}
+
+func (x *ProlongRefreshTokenResp) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProlongRefreshTokenResp.ProtoReflect.Descriptor instead.
+func (*ProlongRefreshTokenResp) Descriptor() ([]byte, []int) {
+	return file_auth_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ProlongRefreshTokenResp) GetResult() bool {
+	if x != nil {
+		return x.Result
+	}
+	return false
+}
+
+type RecoverRefreshTokenReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RecoverRefreshTokenReq) Reset() {
+	*x = RecoverRefreshTokenReq{}
+	mi := &file_auth_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RecoverRefreshTokenReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RecoverRefreshTokenReq) ProtoMessage() {}
+
+func (x *RecoverRefreshTokenReq) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RecoverRefreshTokenReq.ProtoReflect.Descriptor instead.
+func (*RecoverRefreshTokenReq) Descriptor() ([]byte, []int) {
+	return file_auth_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *RecoverRefreshTokenReq) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+type RecoverRefreshTokenResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Result        bool                   `protobuf:"varint,1,opt,name=result,proto3" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RecoverRefreshTokenResp) Reset() {
+	*x = RecoverRefreshTokenResp{}
+	mi := &file_auth_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RecoverRefreshTokenResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RecoverRefreshTokenResp) ProtoMessage() {}
+
+func (x *RecoverRefreshTokenResp) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RecoverRefreshTokenResp.ProtoReflect.Descriptor instead.
+func (*RecoverRefreshTokenResp) Descriptor() ([]byte, []int) {
+	return file_auth_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *RecoverRefreshTokenResp) GetResult() bool {
+	if x != nil {
+		return x.Result
+	}
+	return false
+}
+
 var File_auth_proto protoreflect.FileDescriptor
 
 const file_auth_proto_rawDesc = "" +
@@ -426,27 +602,37 @@ const file_auth_proto_rawDesc = "" +
 	"\x11DeliveryTokenResp\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x12#\n" +
 	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12\x16\n" +
-	"\x06result\x18\x03 \x01(\bR\x06result\"&\n" +
+	"\x06result\x18\x03 \x01(\bR\x06result\"K\n" +
 	"\x0eVerifyTokenReq\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\"B\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\x12#\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"B\n" +
 	"\x0fVerifyTokenResp\x12\x16\n" +
 	"\x06result\x18\x01 \x01(\bR\x06result\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x04R\x06userId\"6\n" +
 	"\x0fRefreshTokenReq\x12#\n" +
-	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"e\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"@\n" +
 	"\x10RefreshTokenResp\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12\x16\n" +
-	"\x06result\x18\x03 \x01(\bR\x06result\"<\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\x12\x16\n" +
+	"\x06result\x18\x02 \x01(\bR\x06result\"<\n" +
 	"\x15RemoveRefreshTokenReq\x12#\n" +
 	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"0\n" +
 	"\x16RemoveRefreshTokenResp\x12\x16\n" +
-	"\x06result\x18\x01 \x01(\bR\x06result2\xa1\x02\n" +
+	"\x06result\x18\x01 \x01(\bR\x06result\"=\n" +
+	"\x16ProlongRefreshTokenReq\x12#\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"1\n" +
+	"\x17ProlongRefreshTokenResp\x12\x16\n" +
+	"\x06result\x18\x01 \x01(\bR\x06result\"=\n" +
+	"\x16RecoverRefreshTokenReq\x12#\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"1\n" +
+	"\x17RecoverRefreshTokenResp\x12\x16\n" +
+	"\x06result\x18\x01 \x01(\bR\x06result2\xcd\x03\n" +
 	"\vAuthService\x12@\n" +
 	"\fDeliverToken\x12\x15.auth.DeliverTokenReq\x1a\x17.auth.DeliveryTokenResp\"\x00\x12<\n" +
 	"\vVerifyToken\x12\x14.auth.VerifyTokenReq\x1a\x15.auth.VerifyTokenResp\"\x00\x12?\n" +
 	"\fRefreshToken\x12\x15.auth.RefreshTokenReq\x1a\x16.auth.RefreshTokenResp\"\x00\x12Q\n" +
-	"\x12RemoveRefreshToken\x12\x1b.auth.RemoveRefreshTokenReq\x1a\x1c.auth.RemoveRefreshTokenResp\"\x00B\x1fZ\x1dbytedancemall/auto/proto;authb\x06proto3"
+	"\x12RemoveRefreshToken\x12\x1b.auth.RemoveRefreshTokenReq\x1a\x1c.auth.RemoveRefreshTokenResp\"\x00\x12T\n" +
+	"\x13ProlongRefreshToken\x12\x1c.auth.ProlongRefreshTokenReq\x1a\x1d.auth.ProlongRefreshTokenResp\"\x00\x12T\n" +
+	"\x13RecoverRefreshToken\x12\x1c.auth.RecoverRefreshTokenReq\x1a\x1d.auth.RecoverRefreshTokenResp\"\x00B\x1fZ\x1dbytedancemall/auto/proto;authb\x06proto3"
 
 var (
 	file_auth_proto_rawDescOnce sync.Once
@@ -460,31 +646,39 @@ func file_auth_proto_rawDescGZIP() []byte {
 	return file_auth_proto_rawDescData
 }
 
-var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_auth_proto_goTypes = []any{
-	(*DeliverTokenReq)(nil),        // 0: auth.DeliverTokenReq
-	(*DeliveryTokenResp)(nil),      // 1: auth.DeliveryTokenResp
-	(*VerifyTokenReq)(nil),         // 2: auth.VerifyTokenReq
-	(*VerifyTokenResp)(nil),        // 3: auth.VerifyTokenResp
-	(*RefreshTokenReq)(nil),        // 4: auth.RefreshTokenReq
-	(*RefreshTokenResp)(nil),       // 5: auth.RefreshTokenResp
-	(*RemoveRefreshTokenReq)(nil),  // 6: auth.RemoveRefreshTokenReq
-	(*RemoveRefreshTokenResp)(nil), // 7: auth.RemoveRefreshTokenResp
+	(*DeliverTokenReq)(nil),         // 0: auth.DeliverTokenReq
+	(*DeliveryTokenResp)(nil),       // 1: auth.DeliveryTokenResp
+	(*VerifyTokenReq)(nil),          // 2: auth.VerifyTokenReq
+	(*VerifyTokenResp)(nil),         // 3: auth.VerifyTokenResp
+	(*RefreshTokenReq)(nil),         // 4: auth.RefreshTokenReq
+	(*RefreshTokenResp)(nil),        // 5: auth.RefreshTokenResp
+	(*RemoveRefreshTokenReq)(nil),   // 6: auth.RemoveRefreshTokenReq
+	(*RemoveRefreshTokenResp)(nil),  // 7: auth.RemoveRefreshTokenResp
+	(*ProlongRefreshTokenReq)(nil),  // 8: auth.ProlongRefreshTokenReq
+	(*ProlongRefreshTokenResp)(nil), // 9: auth.ProlongRefreshTokenResp
+	(*RecoverRefreshTokenReq)(nil),  // 10: auth.RecoverRefreshTokenReq
+	(*RecoverRefreshTokenResp)(nil), // 11: auth.RecoverRefreshTokenResp
 }
 var file_auth_proto_depIdxs = []int32{
-	0, // 0: auth.AuthService.DeliverToken:input_type -> auth.DeliverTokenReq
-	2, // 1: auth.AuthService.VerifyToken:input_type -> auth.VerifyTokenReq
-	4, // 2: auth.AuthService.RefreshToken:input_type -> auth.RefreshTokenReq
-	6, // 3: auth.AuthService.RemoveRefreshToken:input_type -> auth.RemoveRefreshTokenReq
-	1, // 4: auth.AuthService.DeliverToken:output_type -> auth.DeliveryTokenResp
-	3, // 5: auth.AuthService.VerifyToken:output_type -> auth.VerifyTokenResp
-	5, // 6: auth.AuthService.RefreshToken:output_type -> auth.RefreshTokenResp
-	7, // 7: auth.AuthService.RemoveRefreshToken:output_type -> auth.RemoveRefreshTokenResp
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0,  // 0: auth.AuthService.DeliverToken:input_type -> auth.DeliverTokenReq
+	2,  // 1: auth.AuthService.VerifyToken:input_type -> auth.VerifyTokenReq
+	4,  // 2: auth.AuthService.RefreshToken:input_type -> auth.RefreshTokenReq
+	6,  // 3: auth.AuthService.RemoveRefreshToken:input_type -> auth.RemoveRefreshTokenReq
+	8,  // 4: auth.AuthService.ProlongRefreshToken:input_type -> auth.ProlongRefreshTokenReq
+	10, // 5: auth.AuthService.RecoverRefreshToken:input_type -> auth.RecoverRefreshTokenReq
+	1,  // 6: auth.AuthService.DeliverToken:output_type -> auth.DeliveryTokenResp
+	3,  // 7: auth.AuthService.VerifyToken:output_type -> auth.VerifyTokenResp
+	5,  // 8: auth.AuthService.RefreshToken:output_type -> auth.RefreshTokenResp
+	7,  // 9: auth.AuthService.RemoveRefreshToken:output_type -> auth.RemoveRefreshTokenResp
+	9,  // 10: auth.AuthService.ProlongRefreshToken:output_type -> auth.ProlongRefreshTokenResp
+	11, // 11: auth.AuthService.RecoverRefreshToken:output_type -> auth.RecoverRefreshTokenResp
+	6,  // [6:12] is the sub-list for method output_type
+	0,  // [0:6] is the sub-list for method input_type
+	0,  // [0:0] is the sub-list for extension type_name
+	0,  // [0:0] is the sub-list for extension extendee
+	0,  // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_auth_proto_init() }
@@ -498,7 +692,7 @@ func file_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_proto_rawDesc), len(file_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

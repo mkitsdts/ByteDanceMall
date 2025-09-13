@@ -11,6 +11,8 @@ service AuthService {
     rpc VerifyToken(VerifyTokenReq) returns (VerifyTokenResp) {}
     rpc RefreshToken(RefreshTokenReq) returns (RefreshTokenResp) {}
     rpc RemoveRefreshToken(RemoveRefreshTokenReq) returns (RemoveRefreshTokenResp) {}
+    rpc ProlongRefreshToken(ProlongRefreshTokenReq) returns (ProlongRefreshTokenResp) {}
+    rpc RecoverRefreshToken(RecoverRefreshTokenReq) returns (RecoverRefreshTokenResp) {}
 }
 
 message DeliverTokenReq {
@@ -25,6 +27,7 @@ message DeliveryTokenResp {
 
 message VerifyTokenReq {
     string token = 1;
+    string refresh_token = 2;
 }
 
 message VerifyTokenResp {
@@ -38,8 +41,7 @@ message RefreshTokenReq {
 
 message RefreshTokenResp {
     string token = 1;
-    string refresh_token = 2;
-    bool result = 3;
+    bool result = 2;
 }
 
 message RemoveRefreshTokenReq {
@@ -47,5 +49,21 @@ message RemoveRefreshTokenReq {
 }
 
 message RemoveRefreshTokenResp {
+    bool result = 1;
+}
+
+message ProlongRefreshTokenReq {
+    string refresh_token = 1;
+}
+
+message ProlongRefreshTokenResp {
+    bool result = 1;
+}
+
+message RecoverRefreshTokenReq {
+    string refresh_token = 1;
+}
+
+message RecoverRefreshTokenResp {
     bool result = 1;
 }
