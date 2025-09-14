@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytedancemall/auth/config"
 	"bytedancemall/auth/model"
 	"bytedancemall/auth/pkg/database"
 	rds "bytedancemall/auth/pkg/redis"
@@ -15,7 +16,7 @@ import (
 
 func main() {
 
-	port := 14801
+	port := config.Conf.Server.Port
 
 	rds.InitRedis()
 

@@ -1,6 +1,10 @@
 package redis
 
-import "github.com/redis/go-redis/v9"
+import (
+	"bytedancemall/auth/config"
+
+	"github.com/redis/go-redis/v9"
+)
 
 var redisClient *redis.Client
 
@@ -15,8 +19,7 @@ func GetCLI() *redis.Client {
 
 func InitRedis() {
 	redisClient = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Addr:     config.Conf.Redis.Host[0],  // use default Addr
+		Password: config.Conf.Redis.Password, // no password set
 	})
 }

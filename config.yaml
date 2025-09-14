@@ -1,0 +1,13 @@
+server:
+  addr: ":14801"
+
+database:
+  addr: ["localhost:5432"]
+  user: "test"
+  password: "test"
+  db: "test"
+
+redis:
+  addr: ["localhost:6379"]
+  password: ""
+  db: 0
