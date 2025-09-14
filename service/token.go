@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -17,23 +18,24 @@ func (s *AuthService) DeliverToken(ctx context.Context, req *pb.DeliverTokenReq)
 	if err != nil {
 		return &pb.DeliveryTokenResp{Result: false}, err
 	}
-	refreshToken, err := utils.GenerateToken(req.UserId, 60*24*30)
+	refreshToken, err := utils.GenerateRefreshToken()
 	if err != nil {
 		return &pb.DeliveryTokenResp{Result: false}, err
 	}
 	key := "refresh_token:" + refreshToken
-	go func() {
-		for i := range 5 {
-			_, err := rds.GetCLI().Set(context.Background(), key, fmt.Sprint(req.UserId), time.Hour*24*30).Result()
-			if err == nil {
-				break
-			}
-			if i == 4 {
-				slog.Error("Redis SET error", "error", err)
-			}
-			time.Sleep(10 << i * time.Millisecond)
+	maxRetries := 10
+	for i := range maxRetries {
+		_, err := rds.GetCLI().Set(context.Background(), key, fmt.Sprint(req.UserId), time.Hour*24*30).Result()
+		if err == nil {
+			break
 		}
-	}()
+		if i == maxRetries-1 {
+			slog.Error("Redis SET error", "error", err)
+			return &pb.DeliveryTokenResp{Result: false}, err
+		}
+		time.Sleep(10 << i * time.Millisecond)
+	}
+
 	slog.Info(fmt.Sprintf("Generated token for user %d: %s", req.UserId, token))
 	return &pb.DeliveryTokenResp{Token: token, RefreshToken: refreshToken, Result: true}, nil
 }
@@ -63,31 +65,15 @@ func (s *AuthService) RefreshToken(ctx context.Context, req *pb.RefreshTokenReq)
 		}
 		time.Sleep(10 << i * time.Millisecond)
 	}
-	// 解析 refresh token
-	newToken := ""
-	if claim, err := utils.ParseToken(req.RefreshToken); err == nil {
-		// refresh token 未过期，生成新的 token
-		if !claim.ExpiresAt.Before(time.Now().UTC()) {
-			newToken, err = utils.GenerateToken(claim.UserId, 5)
-			if err != nil {
-				slog.Error("Refresh token generation error", "error", err)
-				return &pb.RefreshTokenResp{Result: false}, err
-			}
-			for i := range maxRetries {
-				if _, err = cli.Set(ctx, refreshToken, fmt.Sprint(claim.UserId), time.Hour*24*30).Result(); err == nil {
-					slog.Info("Refresh token renewed", "token", req.RefreshToken)
-					return &pb.RefreshTokenResp{Token: newToken, Result: true}, nil
-				}
-				if i == maxRetries-1 {
-					slog.Error("Redis SET error", "error", err)
-					return &pb.RefreshTokenResp{Result: false}, err
-				}
-				time.Sleep(10 << i * time.Millisecond)
-			}
-		}
-		return &pb.RefreshTokenResp{Result: false}, fmt.Errorf("refresh token not expired yet")
-	} else {
-		slog.Error("Refresh token parsing error", "error", err)
-		return &pb.RefreshTokenResp{Result: false}, nil
+	userID, err := strconv.ParseUint(val, 10, 64)
+	if err != nil {
+		slog.Error("Token generation error", "error", err)
+		return &pb.RefreshTokenResp{Result: false}, err
 	}
+	token, err := utils.GenerateToken(userID, 5)
+	if err != nil {
+		slog.Error("Token generation error", "error", err)
+		return &pb.RefreshTokenResp{Result: false}, err
+	}
+	return &pb.RefreshTokenResp{Result: true, Token: token}, nil
 }

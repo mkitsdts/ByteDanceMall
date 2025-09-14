@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -37,42 +36,33 @@ func (s *AuthService) ProlongRefreshToken(ctx context.Context, req *pb.ProlongRe
 		}
 		time.Sleep(10 << i * time.Millisecond)
 	}
-	claims, err := utils.ParseToken(req.RefreshToken)
+
+	newRefreshToken, err := utils.GenerateRefreshToken()
 	if err != nil {
-		slog.Error("Refresh token parsing error", "error", err)
+		slog.Error("Refresh token generation error", "error", err)
 		return &pb.ProlongRefreshTokenResp{Result: false}, err
 	}
-	if claims == nil || val == "" || val != fmt.Sprint(claims.UserId) {
-		slog.Warn("Refresh token user ID mismatch", "token", req.RefreshToken, "userID_in_token", claims.UserId, "userID_in_redis", val)
-		return &pb.ProlongRefreshTokenResp{Result: false}, nil
-	}
-	if !claims.ExpiresAt.Before(time.Now().UTC()) {
-		slog.Info("Refresh token not expired yet, no need to prolong", "token", req.RefreshToken)
-		return &pb.ProlongRefreshTokenResp{Result: false}, nil
-	}
-	newRefreshToken, _ := utils.GenerateToken(claims.UserId, 60*24*30)
 
-	go func() {
-		// 这里后续需要加入异常处理机制
-		for i := range maxRetries {
-			if _, err = cli.Del(ctx, refreshTokenKey).Result(); err == nil {
-				break
-			}
-			if i == maxRetries-1 {
-				slog.Error("Redis DEL error", "error", err)
-			}
-			time.Sleep(10 << i * time.Millisecond)
+	// 这里后续需要加入异常处理机制
+	for i := range maxRetries {
+		if _, err = cli.Del(ctx, refreshTokenKey).Result(); err == nil {
+			break
 		}
-		for i := range maxRetries {
-			if _, err = cli.Set(ctx, "refresh_token:"+newRefreshToken, val, time.Hour*24*30).Result(); err == nil {
-				break
-			}
-			if i == maxRetries-1 {
-				slog.Error("Redis SET error", "error", err)
-			}
-			time.Sleep(10 << i * time.Millisecond)
+		if i == maxRetries-1 {
+			slog.Error("Redis DEL error", "error", err)
 		}
-	}()
+		time.Sleep(10 << i * time.Millisecond)
+	}
+	for i := range maxRetries {
+		if _, err = cli.Set(ctx, "refresh_token:"+newRefreshToken, val, time.Hour*24*30).Result(); err == nil {
+			break
+		}
+		if i == maxRetries-1 {
+			slog.Error("Redis SET error", "error", err)
+		}
+		time.Sleep(10 << i * time.Millisecond)
+	}
+
 	return &pb.ProlongRefreshTokenResp{Result: true}, nil
 }
 
