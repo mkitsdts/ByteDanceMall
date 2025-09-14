@@ -44,6 +44,7 @@ message RefreshTokenResp {
 
 message RemoveRefreshTokenReq {
     string refresh_token = 1;
+    uint64 user_id = 2;
 }
 
 message RemoveRefreshTokenResp {

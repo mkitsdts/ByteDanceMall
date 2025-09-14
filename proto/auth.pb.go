@@ -322,6 +322,7 @@ func (x *RefreshTokenResp) GetResult() bool {
 type RemoveRefreshTokenReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	UserId        uint64                 `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -361,6 +362,13 @@ func (x *RemoveRefreshTokenReq) GetRefreshToken() string {
 		return x.RefreshToken
 	}
 	return ""
+}
+
+func (x *RemoveRefreshTokenReq) GetUserId() uint64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
 }
 
 type RemoveRefreshTokenResp struct {
@@ -516,9 +524,10 @@ const file_auth_proto_rawDesc = "" +
 	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"@\n" +
 	"\x10RefreshTokenResp\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x12\x16\n" +
-	"\x06result\x18\x02 \x01(\bR\x06result\"<\n" +
+	"\x06result\x18\x02 \x01(\bR\x06result\"U\n" +
 	"\x15RemoveRefreshTokenReq\x12#\n" +
-	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"0\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\x04R\x06userId\"0\n" +
 	"\x16RemoveRefreshTokenResp\x12\x16\n" +
 	"\x06result\x18\x01 \x01(\bR\x06result\"=\n" +
 	"\x16ProlongRefreshTokenReq\x12#\n" +
