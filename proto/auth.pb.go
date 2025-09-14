@@ -182,7 +182,6 @@ func (x *VerifyTokenReq) GetRefreshToken() string {
 type VerifyTokenResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Result        bool                   `protobuf:"varint,1,opt,name=result,proto3" json:"result,omitempty"`
-	UserId        uint64                 `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -222,13 +221,6 @@ func (x *VerifyTokenResp) GetResult() bool {
 		return x.Result
 	}
 	return false
-}
-
-func (x *VerifyTokenResp) GetUserId() uint64 {
-	if x != nil {
-		return x.UserId
-	}
-	return 0
 }
 
 type RefreshTokenReq struct {
@@ -517,10 +509,9 @@ const file_auth_proto_rawDesc = "" +
 	"\x06result\x18\x03 \x01(\bR\x06result\"K\n" +
 	"\x0eVerifyTokenReq\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"B\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\")\n" +
 	"\x0fVerifyTokenResp\x12\x16\n" +
-	"\x06result\x18\x01 \x01(\bR\x06result\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\x04R\x06userId\"6\n" +
+	"\x06result\x18\x01 \x01(\bR\x06result\"6\n" +
 	"\x0fRefreshTokenReq\x12#\n" +
 	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"@\n" +
 	"\x10RefreshTokenResp\x12\x14\n" +

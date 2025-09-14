@@ -31,7 +31,6 @@ message VerifyTokenReq {
 
 message VerifyTokenResp {
     bool result = 1;
-    uint64 user_id = 2;
 }
 
 message RefreshTokenReq {
