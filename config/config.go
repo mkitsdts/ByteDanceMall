@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log/slog"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -12,7 +13,6 @@ type DatabaseConfig struct {
 	Master       string   `json:"master" yaml:"master"`
 	Slaves       []string `json:"slaves" yaml:"slaves"`
 	Name         string   `json:"name" yaml:"name"`
-	Host         string   `json:"host" yaml:"host"`
 	Port         int      `json:"port" yaml:"port"`
 	Username     string   `json:"username" yaml:"username"`
 	Password     string   `json:"password" yaml:"password"`
@@ -37,7 +37,7 @@ type Config struct {
 }
 
 func Init() error {
-	file, err := os.Open("configs.yaml")
+	file, err := os.Open("config.yaml")
 	if err != nil {
 		return err
 	}
@@ -48,5 +48,6 @@ func Init() error {
 		return err
 	}
 
+	slog.Info("Configuration loaded successfully", "config", Conf)
 	return nil
 }

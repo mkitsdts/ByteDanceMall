@@ -17,9 +17,10 @@ func GetCLI() *redis.Client {
 	return redisClient
 }
 
-func InitRedis() {
+func InitRedis() error {
 	redisClient = redis.NewClient(&redis.Options{
 		Addr:     config.Conf.Redis.Host[0],  // use default Addr
 		Password: config.Conf.Redis.Password, // no password set
 	})
+	return nil
 }

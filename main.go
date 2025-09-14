@@ -9,6 +9,7 @@ import (
 	"bytedancemall/auth/service"
 	"fmt"
 	"net"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -16,16 +17,34 @@ import (
 
 func main() {
 
-	port := config.Conf.Server.Port
-
-	rds.InitRedis()
-
-	// 初始化数据库
-	if err := database.NewDatabase(&model.RefreshToken{}); err != nil {
-		fmt.Println("Failed to initialize database:", err)
+	// 加载配置
+	if err := config.Init(); err != nil {
+		fmt.Println("Failed to load config:", err)
 		return
 	}
 
+	port := config.Conf.Server.Port
+
+	for i := range 100 {
+		// 重试连接，防止 redis 未启动导致连接失败
+		if err := rds.InitRedis(); err == nil {
+			break
+		} else if i == 99 {
+			fmt.Println("Failed to initialize Redis:", err)
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	for i := range 100 {
+		// 重试连接，防止 mysql 未启动导致连接失败
+		if err := database.NewDatabase(&model.RefreshToken{}); err == nil {
+			break
+		} else if i == 99 {
+			fmt.Println("Failed to initialize database:", err)
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 	// 设置监听端口
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {

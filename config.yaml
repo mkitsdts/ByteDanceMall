@@ -1,13 +1,13 @@
 server:
-  addr: ":14801"
+  port: 14801
 
 database:
-  addr: ["localhost:5432"]
-  user: "test"
+  master: "auth_mysql"
+  username: "test"
   password: "test"
-  db: "test"
+  name: "test"
+  port: 3306
 
 redis:
-  addr: ["localhost:6379"]
+  host: ["auth_redis:6379"]
   password: ""
-  db: 0

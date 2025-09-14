@@ -30,7 +30,7 @@ func NewDatabase(models ...any) error {
 	masterDSN := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		config.Conf.Database.Username,
 		config.Conf.Database.Password,
-		config.Conf.Database.Host,
+		config.Conf.Database.Master,
 		config.Conf.Database.Port,
 		config.Conf.Database.Name,
 	)
@@ -39,7 +39,7 @@ func NewDatabase(models ...any) error {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		return NewDatabase()
+		return err
 	}
 
 	for _, model := range models {
@@ -81,7 +81,7 @@ func NewDatabase(models ...any) error {
 		Policy:   dbresolver.RandomPolicy{},               // 随机选择从库
 	}))
 	if err != nil {
-		return NewDatabase()
+		return err
 	}
 
 	// 配置连接池
