@@ -22,6 +22,6 @@ cookie 无法跨域请求， sessionid 需要每个系统都存储一个 session
 
 - 分发身份令牌    rpc DeliverTokenByRPC(DeliverTokenReq) returns (DeliveryTokenResp) {}
 - 校验身份令牌    rpc VerifyTokenByRPC(VerifyTokenReq) returns (VerifyTokenResp) {}
-- 续期身份令牌    rpc ProlongTokenByRPC(ProlongTokenReq) returns (ProlongTokenReq) {}
+- 刷新身份令牌    rpc RefreshToken(RefreshTokenReq) returns (RefreshTokenResp) {}
+- 续期刷新令牌    rpc ProlongRefreshToken(ProlongRefreshTokenReq) returns (ProlongRefreshTokenResp) {}
 - 移除身份令牌    rpc RemoveRefreshToken(RemoveRefreshTokenReq) returns (RemoveRefreshTokenResp) {}
-
