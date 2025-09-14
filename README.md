@@ -18,6 +18,15 @@ cookie 无法跨域请求， sessionid 需要每个系统都存储一个 session
 
 但这又存在一个问题，如果多设备登陆的情况下，只需要登陆一个设备，其他设备即使拿着旧的，未过期的 jwt 又能登陆了。所以引入双 token 方案，一个用于存储用户信息的 jwt，另一个用于刷新 jwt 的 refresh_token 。 jwt 过期时间可以设置5分钟，refresh_token 可以7天甚至14天。前端定期申请刷新 jwt ，当修改密码后，删除存储的 refresh_token 。这个类似乐观锁方案避免了原来登陆的设备拿着旧的 token 继续登陆了。
 
+## 性能表现
+
+引入数据库之后，可靠性得到很大提升，但是单点数据库+单点Redis的情况下，QPS在5000左右
+
+P95 22.86ms
+P99 43.31ms
+
+分析：瓶颈主要在数据库，单点数据库连接数过少限制了并发量。未来考虑 异步更新数据库，部署数据库集群 提升性能
+
 ## 接口设计
 
 - 分发身份令牌    rpc DeliverTokenByRPC(DeliverTokenReq) returns (DeliveryTokenResp) {}
