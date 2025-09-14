@@ -37,6 +37,7 @@ func (s *AuthService) DeliverToken(ctx context.Context, req *pb.DeliverTokenReq)
 	}
 
 	slog.Info(fmt.Sprintf("Generated token for user %d: %s", req.UserId, token))
+	go s.asyncSaveToken(req.UserId, "", refreshToken)
 	return &pb.DeliveryTokenResp{Token: token, RefreshToken: refreshToken, Result: true}, nil
 }
 

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytedancemall/auth/model"
+	"bytedancemall/auth/pkg/database"
 	rds "bytedancemall/auth/pkg/redis"
 	pb "bytedancemall/auth/proto"
 	"bytedancemall/auth/service"
@@ -16,6 +18,12 @@ func main() {
 	port := 14801
 
 	rds.InitRedis()
+
+	// 初始化数据库
+	if err := database.NewDatabase(&model.RefreshToken{}); err != nil {
+		fmt.Println("Failed to initialize database:", err)
+		return
+	}
 
 	// 设置监听端口
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))

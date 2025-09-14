@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"log/slog"
+	"strconv"
 	"time"
 
 	rds "bytedancemall/auth/pkg/redis"
@@ -62,7 +63,13 @@ func (s *AuthService) ProlongRefreshToken(ctx context.Context, req *pb.ProlongRe
 		}
 		time.Sleep(10 << i * time.Millisecond)
 	}
-
+	slog.Info("Refresh token prolonged", "old_token", req.RefreshToken, "new_token", newRefreshToken)
+	userid, err := strconv.ParseUint(val, 10, 64)
+	if err != nil {
+		slog.Error("Invalid user ID in refresh token", "user_id", val)
+		return &pb.ProlongRefreshTokenResp{Result: false}, err
+	}
+	go s.asyncSaveToken(userid, req.RefreshToken, newRefreshToken)
 	return &pb.ProlongRefreshTokenResp{Result: true}, nil
 }
 
@@ -81,5 +88,6 @@ func (s *AuthService) RemoveRefreshToken(ctx context.Context, req *pb.RemoveRefr
 		}
 		time.Sleep(10 << i * time.Millisecond)
 	}
+	go s.asyncSaveToken(req.UserId, req.RefreshToken, "")
 	return &pb.RemoveRefreshTokenResp{Result: false}, err
 }

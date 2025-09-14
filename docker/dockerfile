@@ -3,7 +3,7 @@ FROM golang:1.25.1 AS builder
 WORKDIR /app
 
 # 复制源码到容器
-COPY ../. .
+COPY . .
 
 # 设置 Go 代理
 RUN go env -w  GOPROXY=https://goproxy.io,direct && go mod tidy

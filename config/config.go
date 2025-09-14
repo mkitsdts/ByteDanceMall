@@ -3,35 +3,50 @@ package config
 import (
 	"os"
 
-	"go.yaml.in/yaml/v2"
+	"gopkg.in/yaml.v3"
 )
 
+var Conf *Config = &Config{}
+
+type DatabaseConfig struct {
+	Master       string   `json:"master" yaml:"master"`
+	Slaves       []string `json:"slaves" yaml:"slaves"`
+	Name         string   `json:"name" yaml:"name"`
+	Host         string   `json:"host" yaml:"host"`
+	Port         int      `json:"port" yaml:"port"`
+	Username     string   `json:"username" yaml:"username"`
+	Password     string   `json:"password" yaml:"password"`
+	MaxIdleConns int      `json:"max_idle_conns" yaml:"max_idle_conns"`
+	MaxOpenConns int      `json:"max_open_conns" yaml:"max_open_conns"`
+}
+
 type RedisConfig struct {
-	Addr     []string
-	Password string
-	DB       int
+	Host     []string `json:"host" yaml:"host"`
+	Port     int      `json:"port" yaml:"port"`
+	Password string   `json:"password" yaml:"password"`
+}
+
+type Server struct {
+	Port int `json:"port" yaml:"port"`
 }
 
 type Config struct {
-	Redis RedisConfig
+	Server   Server         `json:"server" yaml:"server"`
+	Database DatabaseConfig `json:"database" yaml:"database"`
+	Redis    RedisConfig    `json:"redis" yaml:"redis"`
 }
 
-var Conf = &Config{
-	Redis: RedisConfig{
-		Addr:     []string{"localhost:6379"},
-		Password: "",
-		DB:       0,
-	},
-}
-
-func Init() {
-	file, err := os.ReadFile("config.yaml")
+func Init() error {
+	file, err := os.Open("configs.yaml")
 	if err != nil {
-		panic(err)
+		return err
+	}
+	defer file.Close()
+
+	decoder := yaml.NewDecoder(file)
+	if err := decoder.Decode(Conf); err != nil {
+		return err
 	}
 
-	if err = yaml.Unmarshal(file, Conf); err != nil {
-		panic(err)
-	}
-
+	return nil
 }
