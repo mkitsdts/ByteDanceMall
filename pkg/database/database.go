@@ -1,4 +1,4 @@
-package pkg
+package database
 
 import (
 	"bytedancemall/order/config"
@@ -28,7 +28,7 @@ func NewDatabase(models ...any) error {
 	masterDSN := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		config.Cfg.Database.Username,
 		config.Cfg.Database.Password,
-		config.Cfg.Database.Host,
+		config.Cfg.Database.Master,
 		config.Cfg.Database.Port,
 		config.Cfg.Database.Name,
 	)
@@ -37,6 +37,8 @@ func NewDatabase(models ...any) error {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
+		time.Sleep(100 * time.Millisecond)
+		slog.Error("Failed to connect to master database", " dsn", masterDSN)
 		return NewDatabase()
 	}
 
@@ -79,6 +81,7 @@ func NewDatabase(models ...any) error {
 		Policy:   dbresolver.RandomPolicy{},               // 随机选择从库
 	}))
 	if err != nil {
+		time.Sleep(100 * time.Millisecond)
 		return NewDatabase()
 	}
 

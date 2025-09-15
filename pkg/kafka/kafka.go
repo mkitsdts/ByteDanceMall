@@ -1,4 +1,4 @@
-package pkg
+package kafka
 
 import (
 	"bytedancemall/order/config"
@@ -44,7 +44,8 @@ func GetWriter(tag string) *kafka.Writer {
 
 func NewKafkaWriter() error {
 	if err := ensureTopics(config.Cfg.KafkaReader.Host, config.Cfg.KafkaReader.Topic); err != nil {
-		return fmt.Errorf("failed to ensure kafka topics: %w", err)
+		time.Sleep(10 * time.Second)
+		return NewKafkaWriter()
 	}
 
 	writers := make(map[string]*kafka.Writer)
@@ -68,7 +69,8 @@ func NewKafkaWriter() error {
 
 func NewKafkaReader() error {
 	if err := ensureTopics(config.Cfg.KafkaReader.Host, config.Cfg.KafkaReader.Topic); err != nil {
-		return fmt.Errorf("failed to ensure kafka topics: %w", err)
+		time.Sleep(10 * time.Second)
+		return NewKafkaReader()
 	}
 	readers := make(map[string]*kafka.Reader)
 	for _, topic := range config.Cfg.KafkaReader.Topic {

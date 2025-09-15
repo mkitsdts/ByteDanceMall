@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-// Snowflake constants
 const (
 	epoch        int64 = 1609459200000
 	userIDBits   uint8 = 10
@@ -28,35 +27,34 @@ func GenerateOrderID(userID uint64) uint64 {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	// Get current timestamp in milliseconds
+	// 获取时间戳
 	timestamp := time.Now().UnixNano() / 1e6
 
-	// If clock moved backwards, wait until it catches up
+	// 如果时间回拨则等待
 	if timestamp < lastTimestamp {
 		time.Sleep(time.Duration(lastTimestamp-timestamp) * time.Millisecond)
 		timestamp = time.Now().UnixNano() / 1e6
 	}
 
-	// If same timestamp, increment sequence
+	// 如果是同一时间戳，递增序列号
 	if timestamp == lastTimestamp {
 		sequence = (sequence + 1) & sequenceMask
-		// If sequence exhausted, wait for next millisecond
+		// 如果序列号耗尽，等待下一毫秒
 		if sequence == 0 {
 			for timestamp <= lastTimestamp {
 				timestamp = time.Now().UnixNano() / 1e6
 			}
 		}
 	} else {
-		// Reset sequence for new timestamp
+		// 新时间戳，重置序列号
 		sequence = 0
 	}
 
 	lastTimestamp = timestamp
 
-	// Extract a portion of the userID to fit within the allocated bits
+	// 限制 userID 部分
 	userIDPortion := int64(userID) & userIDMask
 
-	// Build the ID: timestamp | userID | sequence
 	return uint64((timestamp-epoch)<<timestampShift |
 		userIDPortion<<userIDShift |
 		sequence)

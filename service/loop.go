@@ -1,7 +1,8 @@
 package service
 
 import (
-	"bytedancemall/order/pkg"
+	"bytedancemall/order/pkg/database"
+	kfk "bytedancemall/order/pkg/kafka"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -13,7 +14,7 @@ import (
 func (s *OrderService) LoopUpdateOrderStatus() {
 	slog.Info("Start order status update loop")
 	for {
-		msg, err := pkg.GetReader("order_status").FetchMessage(context.Background())
+		msg, err := kfk.GetReader("order_status").FetchMessage(context.Background())
 		if err != nil {
 			slog.Error("Failed to fetch message", "error", err)
 			continue
@@ -38,7 +39,7 @@ func (s *OrderService) updateOrderStatus(ctx context.Context, msg kafka.Message)
 	err := json.Unmarshal(msg.Value, &orderStatus)
 	if err != nil {
 		for range maxRetries {
-			if err = pkg.GetWriter("order_status_dmq").WriteMessages(ctx, kafka.Message{
+			if err = kfk.GetWriter("order_status_dmq").WriteMessages(ctx, kafka.Message{
 				Key:   msg.Key,
 				Value: msg.Value,
 			}); err == nil {
@@ -48,7 +49,7 @@ func (s *OrderService) updateOrderStatus(ctx context.Context, msg kafka.Message)
 		return fmt.Errorf("failed to send to DMQ: %w", err)
 	}
 
-	tx := pkg.DB().Begin()
+	tx := database.DB().Begin()
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()

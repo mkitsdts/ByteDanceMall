@@ -1,27 +1,28 @@
 package service
 
 import (
-	"bytedancemall/order/pkg"
+	"bytedancemall/order/pkg/database"
+	"bytedancemall/order/pkg/redis"
 	pb "bytedancemall/order/proto"
 	"bytedancemall/order/utils"
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
+	"strconv"
 	"time"
 )
 
 func (s *OrderService) ListOrder(ctx context.Context, req *pb.ListOrderReq) (*pb.ListOrderResp, error) {
 	id := req.UserId
-	data, err := pkg.GetRedisCli().Get(ctx, "order_list_"+fmt.Sprint(id)).Result()
+	data, err := redis.GetRedisCli().Get(ctx, "order_list_"+fmt.Sprint(id)).Result()
 	var orders Orders
 	if err == nil {
 		if err := json.Unmarshal([]byte(data), &orders); err == nil {
 			respBody := make([]*pb.Order, 0, len(orders.Items))
 			for _, item := range orders.Items {
 				respBody = append(respBody, &pb.Order{
-					OrderId:   item.OrderId,
-					UserId:    item.UserId,
+					OrderId:   item.OrderID,
+					UserId:    item.UserID,
 					ProductId: item.ProductID,
 					Amount:    item.Amount,
 					Cost:      item.Cost,
@@ -37,7 +38,7 @@ func (s *OrderService) ListOrder(ctx context.Context, req *pb.ListOrderReq) (*pb
 			}, err
 		}
 	}
-	tx := pkg.DB().Begin()
+	tx := database.DB().Begin()
 
 	maxRetries := 5
 	for i := range maxRetries {
@@ -55,8 +56,8 @@ func (s *OrderService) ListOrder(ctx context.Context, req *pb.ListOrderReq) (*pb
 	respBody := make([]*pb.Order, 0, len(orders.Items))
 	for _, item := range orders.Items {
 		respBody = append(respBody, &pb.Order{
-			OrderId:   item.OrderId,
-			UserId:    item.UserId,
+			OrderId:   item.OrderID,
+			UserId:    item.UserID,
 			ProductId: item.ProductID,
 			Amount:    item.Amount,
 			Cost:      item.Cost,
@@ -70,19 +71,20 @@ func (s *OrderService) ListOrder(ctx context.Context, req *pb.ListOrderReq) (*pb
 
 func (s *OrderService) GetOrderStatus(ctx context.Context, req *pb.GetOrderStatusReq) (*pb.GetOrderStatusResp, error) {
 	var order Order
-	result, err := pkg.GetRedisCli().Get(ctx, "order_"+fmt.Sprint(req.OrderId)).Result()
-	if err == nil {
-		if err := json.Unmarshal([]byte(result), &order); err == nil {
+	result := redis.GetRedisCli().Get(ctx, "order_status:"+fmt.Sprint(req.OrderId))
+	if result.Err() == nil {
+		if err := json.Unmarshal([]byte(result.Val()), &order); err == nil {
 			return &pb.GetOrderStatusResp{
 				OrderStatus: order.Status,
 			}, nil
 		}
 	}
-	tx := pkg.DB().Begin()
+	var err error
+	tx := database.DB().Begin()
 
 	maxRetries := 5
 	for i := range maxRetries {
-		if err := tx.Where("order_id = ?", req.OrderId).First(&order).Error; err == nil {
+		if err = tx.Where("order_id = ?", req.OrderId).First(&order).Error; err == nil {
 			return &pb.GetOrderStatusResp{
 				OrderStatus: order.Status,
 			}, nil
@@ -96,22 +98,54 @@ func (s *OrderService) GetOrderStatus(ctx context.Context, req *pb.GetOrderStatu
 	}
 	tx.Commit()
 	return &pb.GetOrderStatusResp{
-		OrderStatus: -1,
+		OrderStatus: UNKNOWN,
 	}, nil
 }
 
 func (s *OrderService) CreateOrder(ctx context.Context, req *pb.CreateOrderReq) (*pb.CreateOrderResp, error) {
-	tx := pkg.DB().Begin()
+	tx := database.DB().Begin()
 
 	maxRetries := 5
 	var err error
+	// 确认订单号和用户ID匹配
+	orderKey := "order_id:" + fmt.Sprint(req.OrderId)
+	var order_userID uint64
+	for i := range maxRetries {
+		if res := redis.GetRedisCli().Get(ctx, orderKey); res.Err() == nil {
+			order_userID, err = strconv.ParseUint(res.Val(), 10, 64)
+			if err != nil {
+				return &pb.CreateOrderResp{
+					Result: false,
+				}, fmt.Errorf("invalid user ID in Redis for order ID")
+			}
+			break
+		}
+		if i == maxRetries-1 {
+			return &pb.CreateOrderResp{
+				Result: false,
+			}, fmt.Errorf("order ID not found in Redis after retries")
+		}
+		time.Sleep(10 << i * time.Millisecond)
+	}
+	// 不匹配则直接返回
+	if order_userID != req.UserId {
+		return &pb.CreateOrderResp{
+			Result: false,
+		}, fmt.Errorf("order ID does not match user ID")
+	}
+
 	for i := range maxRetries {
 		if err = tx.Create(&Order{
-			UserId:    req.UserId,
-			ProductID: req.ProductId,
-			Amount:    req.Amount,
-			Cost:      req.Cost,
-			Status:    WAITING_PAYMENT,
+			OrderID:       req.OrderId,
+			UserID:        req.UserId,
+			ProductID:     req.ProductId,
+			Amount:        req.Amount,
+			Cost:          req.Cost,
+			Status:        WAITING_PAYMENT,
+			StreetAddress: req.Address.StreetAddress,
+			City:          req.Address.City,
+			State:         req.Address.State,
+			PaymentStatus: NOT_PAID,
 		}).Error; err == nil {
 			if err = tx.Commit().Error; err == nil {
 				return &pb.CreateOrderResp{
@@ -132,26 +166,28 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *pb.CreateOrderReq) 
 			Result: false,
 		}, err
 	}
-	go func() {
-		time.AfterFunc(5*time.Minute, func() {
-			for i := range maxRetries {
-				if err := pkg.DB().Model(&Order{}).Where("order_id = ? and status = ?", req.OrderId, WAITING_PAYMENT).Update("status", CANCELED).Error; err == nil {
-					return
-				}
-				time.Sleep(10 << i * time.Millisecond)
-				if i == maxRetries-1 {
-					slog.Error("Failed to auto-cancel order after retries", "order_id", req.OrderId)
-				}
-			}
-		})
-	}()
+
 	return &pb.CreateOrderResp{
-		Result: true,
+		Result: false,
 	}, nil
 }
 
-func ApplyOrderID(ctx context.Context, req *pb.ApplyOrderIDReq) (*pb.ApplyOrderIDResp, error) {
+func (s *OrderService) ApplyOrderID(ctx context.Context, req *pb.ApplyOrderIDReq) (*pb.ApplyOrderIDResp, error) {
 	id := utils.GenerateOrderID(req.UserId)
+	maxRetries := 5
+	for i := range maxRetries {
+		if err := redis.GetRedisCli().Set(ctx, "order_id:"+fmt.Sprint(id), req.UserId, 24*time.Hour).Err(); err == nil {
+			break
+		} else {
+			if i == maxRetries-1 {
+				return &pb.ApplyOrderIDResp{
+					OrderId: 0,
+					Result:  false,
+				}, err
+			}
+			time.Sleep(10 << i * time.Millisecond)
+		}
+	}
 	return &pb.ApplyOrderIDResp{
 		OrderId: id,
 		Result:  true,

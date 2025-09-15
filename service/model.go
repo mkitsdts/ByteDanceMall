@@ -1,8 +1,8 @@
 package service
 
 type Order struct {
-	OrderId       uint64  `json:"order_id" gorm:"primary_key;unique"`
-	UserId        uint64  `json:"user_id" gorm:"index"`
+	OrderID       uint64  `json:"order_id" gorm:"primary_key;unique"`
+	UserID        uint64  `json:"user_id" gorm:"index"`
 	StreetAddress string  `json:"street_address"`
 	City          string  `json:"city" gorm:"varchar(32)"`
 	Phone         string  `json:"phone" gorm:"varchar(32)"`
@@ -10,6 +10,7 @@ type Order struct {
 	ProductID     uint64  `json:"product_id"`
 	Amount        uint64  `json:"amount"`
 	Cost          float32 `json:"cost"`
+	PaymentStatus int32   `json:"payment_status" gorm:"type:smallint"`
 	Status        int32   `json:"status" gorm:"type:smallint"`
 }
 

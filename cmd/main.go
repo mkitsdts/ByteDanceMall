@@ -2,50 +2,61 @@ package main
 
 import (
 	"bytedancemall/order/config"
-	"bytedancemall/order/pkg"
+	"bytedancemall/order/pkg/database"
+	"bytedancemall/order/pkg/kafka"
+	"bytedancemall/order/pkg/redis"
 	pb "bytedancemall/order/proto"
 	"bytedancemall/order/service"
 	"fmt"
 	"log/slog"
 	"net"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 func main() {
+	// 加载配置
+	if err := config.Init(); err != nil {
+		slog.Error("Failed to load config", "error", err)
+		time.Sleep(10 * time.Second)
+		return
+	}
+
 	// 设置监听端口
-	port := 14803
+	port := config.Cfg.Server.Port
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		slog.Error("Failed to listen: %v", "error", err)
+		time.Sleep(10 * time.Second)
 	}
 
 	// 创建gRPC服务器
 	s := grpc.NewServer()
 
-	if err := config.Init(); err != nil {
-		slog.Error("Failed to load config", "error", err)
-		return
-	}
 	// 创建数据库连接
-	if err := pkg.NewDatabase(&service.Order{}); err != nil {
+	if err := database.NewDatabase(&service.Order{}); err != nil {
 		slog.Error("Failed to connect to database", "error", err)
+		time.Sleep(10 * time.Second)
 		return
 	}
 
-	if err := pkg.NewRedis(); err != nil {
+	if err := redis.NewRedis(); err != nil {
 		slog.Error("Failed to connect to Redis", "error", err)
+		time.Sleep(10 * time.Second)
 		return
 	}
 
-	if err := pkg.NewKafkaWriter(); err != nil {
+	if err := kafka.NewKafkaWriter(); err != nil {
 		slog.Error("Failed to create Kafka producer", "error", err)
+		time.Sleep(10 * time.Second)
 		return
 	}
 
-	if err := pkg.NewKafkaReader(); err != nil {
+	if err := kafka.NewKafkaReader(); err != nil {
 		slog.Error("Failed to create Kafka reader", "error", err)
+		time.Sleep(10 * time.Second)
 		return
 	}
 
