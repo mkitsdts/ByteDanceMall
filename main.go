@@ -13,35 +13,33 @@ import (
 )
 
 func main() {
-	// Initialize the gRPC server
-	server := grpc.NewServer()
-
-	// 	// 注册服务
-
+	// 初始化
 	config.Init()
 	rds.Init()
 
-	llmserever := service.NewLLMService()
+	server := grpc.NewServer()
 
-	pb.RegisterLLMServiceServer(server, llmserever)
+	s := service.NewLLMService()
+	pb.RegisterLLMServiceServer(server, s)
 
 	// // 注册reflection服务，便于使用grpcurl等工具调试
 	reflection.Register(server)
+
 	// // 监听端口
 	port := 14804
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	//
+	fmt.Println("Listening on port:", port)
 	if err != nil {
-		fmt.Printf("监听端口失败: %v", err)
+		fmt.Println("监听端口失败:", err)
 		return
 	}
 	//
 	// // 启动服务
 	//
 	if err := server.Serve(listener); err != nil {
-		fmt.Printf("启动服务失败: %v", err)
+		fmt.Println("启动服务失败: ", err)
 		return
 	}
 	//
-	// fmt.Printf("用户服务启动成功，监听端口: %d", port)
+	fmt.Println("用户服务启动成功，监听端口:", port)
 }

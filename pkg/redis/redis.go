@@ -24,10 +24,14 @@ func Init() {
 			Addr:     config.Conf.Redis.Host[0] + ":" + fmt.Sprint(config.Conf.Redis.Port),
 			Password: config.Conf.Redis.Password, // no password set
 			DB:       config.Conf.Redis.DB,       // use default DB
+			Protocol: 2,
 		})
 	} else {
 		panic("redis cluster not supported yet")
 	}
+}
+
+func CreateIndex() error {
 	ctx := context.Background()
 
 	client.FTDropIndexWithArgs(ctx,
@@ -52,7 +56,7 @@ func Init() {
 			FieldType: redis.SearchFieldTypeVector,
 			VectorArgs: &redis.FTVectorArgs{
 				HNSWOptions: &redis.FTHNSWOptions{
-					Dim:            384,
+					Dim:            1024,
 					DistanceMetric: "L2",
 					Type:           "FLOAT32",
 				},
@@ -62,5 +66,7 @@ func Init() {
 
 	if err != nil {
 		slog.Error("failed to create index", "error", err)
+		return err
 	}
+	return nil
 }
