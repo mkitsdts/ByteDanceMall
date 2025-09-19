@@ -362,6 +362,7 @@ func (x *ListOrderResp) GetOrders() []*Order {
 type ApplyOrderIDReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"` // 幂等性token
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -401,6 +402,13 @@ func (x *ApplyOrderIDReq) GetUserId() uint64 {
 		return x.UserId
 	}
 	return 0
+}
+
+func (x *ApplyOrderIDReq) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
 }
 
 type ApplyOrderIDResp struct {
@@ -583,6 +591,94 @@ func (x *CreateOrderResp) GetResult() bool {
 	return false
 }
 
+type CancelOrderReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OrderId       uint64                 `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CancelOrderReq) Reset() {
+	*x = CancelOrderReq{}
+	mi := &file_order_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CancelOrderReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CancelOrderReq) ProtoMessage() {}
+
+func (x *CancelOrderReq) ProtoReflect() protoreflect.Message {
+	mi := &file_order_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CancelOrderReq.ProtoReflect.Descriptor instead.
+func (*CancelOrderReq) Descriptor() ([]byte, []int) {
+	return file_order_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *CancelOrderReq) GetOrderId() uint64 {
+	if x != nil {
+		return x.OrderId
+	}
+	return 0
+}
+
+type CancelOrderResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Result        bool                   `protobuf:"varint,1,opt,name=result,proto3" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CancelOrderResp) Reset() {
+	*x = CancelOrderResp{}
+	mi := &file_order_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CancelOrderResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CancelOrderResp) ProtoMessage() {}
+
+func (x *CancelOrderResp) ProtoReflect() protoreflect.Message {
+	mi := &file_order_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CancelOrderResp.ProtoReflect.Descriptor instead.
+func (*CancelOrderResp) Descriptor() ([]byte, []int) {
+	return file_order_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *CancelOrderResp) GetResult() bool {
+	if x != nil {
+		return x.Result
+	}
+	return false
+}
+
 var File_order_proto protoreflect.FileDescriptor
 
 const file_order_proto_rawDesc = "" +
@@ -610,9 +706,10 @@ const file_order_proto_rawDesc = "" +
 	"\x04cost\x18\a \x01(\x02R\x04cost\x12\x19\n" +
 	"\border_id\x18\b \x01(\x04R\aorderId\"5\n" +
 	"\rListOrderResp\x12$\n" +
-	"\x06orders\x18\x01 \x03(\v2\f.order.OrderR\x06orders\"*\n" +
+	"\x06orders\x18\x01 \x03(\v2\f.order.OrderR\x06orders\"@\n" +
 	"\x0fApplyOrderIDReq\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x04R\x06userId\"E\n" +
+	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x14\n" +
+	"\x05token\x18\x02 \x01(\tR\x05token\"E\n" +
 	"\x10ApplyOrderIDResp\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\x04R\aorderId\x12\x16\n" +
 	"\x06result\x18\x02 \x01(\bR\x06result\"\xb9\x01\n" +
@@ -625,12 +722,17 @@ const file_order_proto_rawDesc = "" +
 	"\border_id\x18\x05 \x01(\x04R\aorderId\x12\x12\n" +
 	"\x04cost\x18\x06 \x01(\x02R\x04cost\")\n" +
 	"\x0fCreateOrderResp\x12\x16\n" +
-	"\x06result\x18\x01 \x01(\bR\x06result2\x94\x02\n" +
+	"\x06result\x18\x01 \x01(\bR\x06result\"+\n" +
+	"\x0eCancelOrderReq\x12\x19\n" +
+	"\border_id\x18\x01 \x01(\x04R\aorderId\")\n" +
+	"\x0fCancelOrderResp\x12\x16\n" +
+	"\x06result\x18\x01 \x01(\bR\x06result2\xd4\x02\n" +
 	"\fOrderService\x128\n" +
 	"\tListOrder\x12\x13.order.ListOrderReq\x1a\x14.order.ListOrderResp\"\x00\x12G\n" +
 	"\x0eGetOrderStatus\x12\x18.order.GetOrderStatusReq\x1a\x19.order.GetOrderStatusResp\"\x00\x12A\n" +
 	"\fApplyOrderID\x12\x16.order.ApplyOrderIDReq\x1a\x17.order.ApplyOrderIDResp\"\x00\x12>\n" +
-	"\vCreateOrder\x12\x15.order.CreateOrderReq\x1a\x16.order.CreateOrderResp\"\x00B!Z\x1fbytedancemall/order/proto;orderb\x06proto3"
+	"\vCreateOrder\x12\x15.order.CreateOrderReq\x1a\x16.order.CreateOrderResp\"\x00\x12>\n" +
+	"\vCancelOrder\x12\x15.order.CancelOrderReq\x1a\x16.order.CancelOrderResp\"\x00B!Z\x1fbytedancemall/order/proto;orderb\x06proto3"
 
 var (
 	file_order_proto_rawDescOnce sync.Once
@@ -644,7 +746,7 @@ func file_order_proto_rawDescGZIP() []byte {
 	return file_order_proto_rawDescData
 }
 
-var file_order_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_order_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_order_proto_goTypes = []any{
 	(*GetOrderStatusReq)(nil),  // 0: order.GetOrderStatusReq
 	(*GetOrderStatusResp)(nil), // 1: order.GetOrderStatusResp
@@ -656,24 +758,28 @@ var file_order_proto_goTypes = []any{
 	(*ApplyOrderIDResp)(nil),   // 7: order.ApplyOrderIDResp
 	(*CreateOrderReq)(nil),     // 8: order.CreateOrderReq
 	(*CreateOrderResp)(nil),    // 9: order.CreateOrderResp
+	(*CancelOrderReq)(nil),     // 10: order.CancelOrderReq
+	(*CancelOrderResp)(nil),    // 11: order.CancelOrderResp
 }
 var file_order_proto_depIdxs = []int32{
-	3, // 0: order.Order.address:type_name -> order.Address
-	4, // 1: order.ListOrderResp.orders:type_name -> order.Order
-	3, // 2: order.CreateOrderReq.address:type_name -> order.Address
-	2, // 3: order.OrderService.ListOrder:input_type -> order.ListOrderReq
-	0, // 4: order.OrderService.GetOrderStatus:input_type -> order.GetOrderStatusReq
-	6, // 5: order.OrderService.ApplyOrderID:input_type -> order.ApplyOrderIDReq
-	8, // 6: order.OrderService.CreateOrder:input_type -> order.CreateOrderReq
-	5, // 7: order.OrderService.ListOrder:output_type -> order.ListOrderResp
-	1, // 8: order.OrderService.GetOrderStatus:output_type -> order.GetOrderStatusResp
-	7, // 9: order.OrderService.ApplyOrderID:output_type -> order.ApplyOrderIDResp
-	9, // 10: order.OrderService.CreateOrder:output_type -> order.CreateOrderResp
-	7, // [7:11] is the sub-list for method output_type
-	3, // [3:7] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	3,  // 0: order.Order.address:type_name -> order.Address
+	4,  // 1: order.ListOrderResp.orders:type_name -> order.Order
+	3,  // 2: order.CreateOrderReq.address:type_name -> order.Address
+	2,  // 3: order.OrderService.ListOrder:input_type -> order.ListOrderReq
+	0,  // 4: order.OrderService.GetOrderStatus:input_type -> order.GetOrderStatusReq
+	6,  // 5: order.OrderService.ApplyOrderID:input_type -> order.ApplyOrderIDReq
+	8,  // 6: order.OrderService.CreateOrder:input_type -> order.CreateOrderReq
+	10, // 7: order.OrderService.CancelOrder:input_type -> order.CancelOrderReq
+	5,  // 8: order.OrderService.ListOrder:output_type -> order.ListOrderResp
+	1,  // 9: order.OrderService.GetOrderStatus:output_type -> order.GetOrderStatusResp
+	7,  // 10: order.OrderService.ApplyOrderID:output_type -> order.ApplyOrderIDResp
+	9,  // 11: order.OrderService.CreateOrder:output_type -> order.CreateOrderResp
+	11, // 12: order.OrderService.CancelOrder:output_type -> order.CancelOrderResp
+	8,  // [8:13] is the sub-list for method output_type
+	3,  // [3:8] is the sub-list for method input_type
+	3,  // [3:3] is the sub-list for extension type_name
+	3,  // [3:3] is the sub-list for extension extendee
+	0,  // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_order_proto_init() }
@@ -687,7 +793,7 @@ func file_order_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_order_proto_rawDesc), len(file_order_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

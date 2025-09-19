@@ -1,7 +1,7 @@
 package service
 
 type Order struct {
-	OrderID       uint64  `json:"order_id" gorm:"primary_key;unique"`
+	OrderID       uint64  `json:"order_id" gorm:"primaryKey;unique"`
 	UserID        uint64  `json:"user_id" gorm:"index"`
 	StreetAddress string  `json:"street_address"`
 	City          string  `json:"city" gorm:"varchar(32)"`

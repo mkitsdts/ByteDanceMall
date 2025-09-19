@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	rds "github.com/redis/go-redis/v9"
 )
 
 func (s *OrderService) ListOrder(ctx context.Context, req *pb.ListOrderReq) (*pb.ListOrderResp, error) {
@@ -173,11 +175,86 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *pb.CreateOrderReq) 
 }
 
 func (s *OrderService) ApplyOrderID(ctx context.Context, req *pb.ApplyOrderIDReq) (*pb.ApplyOrderIDResp, error) {
-	id := utils.GenerateOrderID(req.UserId)
-	maxRetries := 5
+	maxRetries := 3
+	// 幂等性检查
+	var userId uint64
 	for i := range maxRetries {
-		if err := redis.GetRedisCli().Set(ctx, "order_id:"+fmt.Sprint(id), req.UserId, 24*time.Hour).Err(); err == nil {
+		if result, err := redis.GetRedisCli().Get(ctx, "lock:token:"+fmt.Sprint(req.Token)).Result(); err == nil {
+			userId, _ = strconv.ParseUint(result, 10, 64)
+			if userId != req.UserId {
+				return &pb.ApplyOrderIDResp{
+					OrderId: 0,
+					Result:  false,
+				}, fmt.Errorf("invalid token for user")
+			} else {
+				value, err := waitRedisValue(ctx, "order_id:token:"+fmt.Sprint(req.Token))
+				if err != nil {
+					return &pb.ApplyOrderIDResp{
+						OrderId: 0,
+						Result:  false,
+					}, err
+				}
+				id, err := strconv.ParseUint(value, 10, 64)
+				if err != nil {
+					return &pb.ApplyOrderIDResp{
+						OrderId: 0,
+						Result:  false,
+					}, err
+				}
+				return &pb.ApplyOrderIDResp{
+					OrderId: id,
+					Result:  true,
+				}, nil
+			}
+		} else if err == rds.Nil {
 			break
+		} else if i == maxRetries-1 {
+			return &pb.ApplyOrderIDResp{
+				OrderId: 0,
+				Result:  false,
+			}, err
+		}
+		time.Sleep(10 << i * time.Millisecond)
+	}
+	// 获取分布式锁
+	// 分布式锁应该用 RedLock 算法，这里为了简化只用单节点实现
+	for i := range maxRetries {
+		if cmd := redis.GetRedisCli().SetNX(ctx, "lock:token:"+fmt.Sprint(req.Token), "locked", 5*time.Second); cmd.Err() == nil {
+			if cmd.Val() {
+				// 成功获得锁
+				break
+			} else {
+				value, err := waitRedisValue(ctx, "order_id:token:"+fmt.Sprint(req.Token))
+				if err != nil {
+					return &pb.ApplyOrderIDResp{
+						OrderId: 0,
+						Result:  false,
+					}, err
+				}
+				id, err := strconv.ParseUint(value, 10, 64)
+				if err != nil {
+					return &pb.ApplyOrderIDResp{
+						OrderId: 0,
+						Result:  false,
+					}, err
+				}
+				return &pb.ApplyOrderIDResp{
+					OrderId: id,
+					Result:  true,
+				}, nil
+			}
+		}
+		time.Sleep(10 << i * time.Millisecond)
+	}
+
+	id := utils.GenerateOrderID(req.UserId)
+
+	for i := range maxRetries {
+		if err := redis.GetRedisCli().Set(ctx, "order_id:token:"+fmt.Sprint(req.Token), req.UserId, 15*time.Minute).Err(); err == nil {
+			return &pb.ApplyOrderIDResp{
+				OrderId: id,
+				Result:  true,
+			}, nil
 		} else {
 			if i == maxRetries-1 {
 				return &pb.ApplyOrderIDResp{
@@ -189,7 +266,7 @@ func (s *OrderService) ApplyOrderID(ctx context.Context, req *pb.ApplyOrderIDReq
 		}
 	}
 	return &pb.ApplyOrderIDResp{
-		OrderId: id,
-		Result:  true,
-	}, nil
+		OrderId: 0,
+		Result:  false,
+	}, fmt.Errorf("unknown error")
 }

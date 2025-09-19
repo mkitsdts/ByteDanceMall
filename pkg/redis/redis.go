@@ -4,6 +4,7 @@ import (
 	"bytedancemall/order/config"
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -20,6 +21,11 @@ func NewRedis() error {
 		client = redis.NewClient(&redis.Options{
 			Addr:     fmt.Sprintf("%s:%d", config.Cfg.Redis.Host[0], config.Cfg.Redis.Port),
 			Password: config.Cfg.Redis.Password,
+			// 参数
+			MaxRetries:   3,
+			MinIdleConns: 10,
+			PoolSize:     50,
+			PoolTimeout:  2 * time.Second,
 		})
 		// 测试连接
 		if err := client.Ping(context.Background()).Err(); err != nil {

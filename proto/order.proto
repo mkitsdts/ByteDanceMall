@@ -11,6 +11,7 @@ service OrderService {
   rpc GetOrderStatus(GetOrderStatusReq) returns (GetOrderStatusResp) {}
   rpc ApplyOrderID(ApplyOrderIDReq) returns (ApplyOrderIDResp) {}
   rpc CreateOrder(CreateOrderReq) returns (CreateOrderResp) {}
+  rpc CancelOrder(CancelOrderReq) returns (CancelOrderResp) {}
 }
 
 message GetOrderStatusReq {
@@ -48,6 +49,7 @@ message ListOrderResp {
 
 message ApplyOrderIDReq {
   uint64 user_id = 1;
+  string token = 2; // 幂等性token
 }
 
 message ApplyOrderIDResp {
@@ -65,5 +67,13 @@ message CreateOrderReq {
 }
 
 message CreateOrderResp {
+  bool result = 1;
+}
+
+message CancelOrderReq {
+  uint64 order_id = 1;
+}
+
+message CancelOrderResp {
   bool result = 1;
 }
