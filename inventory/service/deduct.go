@@ -124,7 +124,7 @@ waitLoop:
 			Result: false,
 		}, err
 	}
-	result := s.Redis.Set(ctx, lockKey, "1", 30*time.Second)
+	result := s.Redis.Set(ctx, lockKey, uid+":1", 30*time.Second)
 	if result.Err() == nil {
 		return &pb.DeductInventoryResp{
 			Result: true,
@@ -138,7 +138,7 @@ waitLoop:
 func (s *InventoryService) deduct(product_id uint64, amount uint64, order_id uint64) error {
 	slog.Info("Starting inventory deduction", "product_id", product_id, "amount", amount)
 	// 乐观锁重试机制
-	maxRetries := 10
+	maxRetries := 3
 	for retry := range maxRetries {
 		tx := s.DB.Master.Begin()
 		var inventory model.Inventory
