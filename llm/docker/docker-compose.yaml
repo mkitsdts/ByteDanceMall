@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:8
+    container_name: gomall-LLMservice-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--loadmodule", "/usr/lib/redis/modules/redisearch.so"]
+    restart: unless-stopped
+  
+  gomall-llmservice:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gomall-LLMservice
+    ports:
+      - "8080:8080"
+    environment:
+      - CONFIG_PATH=/app/config.yaml
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    depends_on:
+      - redis
+    restart: unless-stopped

@@ -1,0 +1,70 @@
+version: '3'
+
+services:
+  # MySQL service
+  mysql:
+    image: mysql:8.0
+    container_name: gomall-cart-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: cart
+      MYSQL_USER: cart
+      MYSQL_PASSWORD: cart
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis service
+  redis:
+    image: redis:8
+    container_name: gomall-cart-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: apache/kafka:4.0.0
+    container_name: gomall-inventory-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://kafka:29093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_KRAFT_CLUSTER_ID: "$(< /dev/urandom tr -dc 0-9 | head -c32)"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+  # Cart service
+  #cart-service:
+  #  build:
+  #    context: ..
+  #    dockerfile: ./docker/dockerfile
+  #  ports:
+  #   - "14803:14803"
+  #  depends_on:
+  #    - mysql
+  #    - redis
+
+volumes:
+  mysql_data:
+  redis_data:

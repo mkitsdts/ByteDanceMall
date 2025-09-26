@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-deployment
+  labels:
+    app: auth
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+      - name: auth
+        image: your-docker-repo/auth:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: auth-secret
+              key: database_url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: auth-secret
+              key: redis_url
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+          limits:
+            memory: "512Mi"
+            cpu: "1"

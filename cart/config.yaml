@@ -1,0 +1,17 @@
+database:
+    host: "localhost"
+    port: "3306"
+    user: "cart"
+    password: "cart"
+    database: "cart"
+
+
+redis:
+    address: ["localhost:6379"]
+
+server:
+    port: 14803
+
+kafka:
+    brokers: ["localhost:9092"]
+    topic: "cart"

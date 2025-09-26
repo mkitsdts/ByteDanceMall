@@ -1,0 +1,13 @@
+server:
+  port: 14801
+
+database:
+  master: "auth_mysql"
+  username: "test"
+  password: "test"
+  name: "test"
+  port: 3306
+
+redis:
+  host: ["auth_redis:6379"]
+  password: ""

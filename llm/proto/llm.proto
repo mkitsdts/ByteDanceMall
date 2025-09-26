@@ -1,0 +1,27 @@
+// 大模型定义
+
+syntax = "proto3";
+
+package llm;
+
+option go_package = "bytedancemall/llm/proto;llm";
+
+service LLMService {
+  rpc IntelligentCustomer(QuestionReq) returns (CustomerAnswerResp) {}
+  rpc ShopAssistant(QuestionReq) returns (AssistantAnswerResp) {}
+}
+
+message QuestionReq {
+  string question = 1;
+}
+
+message CustomerAnswerResp {
+  string answer = 1;
+  bool result = 2;
+}
+
+message AssistantAnswerResp {
+  string answer = 1;
+  repeated uint64 product_ids = 2;
+  bool result = 3;
+}

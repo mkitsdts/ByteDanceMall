@@ -1,0 +1,60 @@
+// 认证模块的定义
+
+syntax="proto3";
+
+package auth;
+
+option go_package="bytedancemall/auto/proto;auth";
+
+service AuthService {
+    rpc DeliverToken(DeliverTokenReq) returns (DeliveryTokenResp) {}
+    rpc VerifyToken(VerifyTokenReq) returns (VerifyTokenResp) {}
+    rpc RefreshToken(RefreshTokenReq) returns (RefreshTokenResp) {}
+    rpc RemoveRefreshToken(RemoveRefreshTokenReq) returns (RemoveRefreshTokenResp) {}
+    rpc ProlongRefreshToken(ProlongRefreshTokenReq) returns (ProlongRefreshTokenResp) {}
+}
+
+message DeliverTokenReq {
+    uint64 user_id = 1;
+}
+
+message DeliveryTokenResp {
+    string token = 1;
+    string refresh_token = 2;
+    bool result = 3;
+}
+
+message VerifyTokenReq {
+    string token = 1;
+    string refresh_token = 2;
+}
+
+message VerifyTokenResp {
+    bool result = 1;
+}
+
+message RefreshTokenReq {
+    string refresh_token = 1;
+}
+
+message RefreshTokenResp {
+    string token = 1;
+    bool result = 2;
+}
+
+message RemoveRefreshTokenReq {
+    string refresh_token = 1;
+    uint64 user_id = 2;
+}
+
+message RemoveRefreshTokenResp {
+    bool result = 1;
+}
+
+message ProlongRefreshTokenReq {
+    string refresh_token = 1;
+}
+
+message ProlongRefreshTokenResp {
+    bool result = 1;
+}

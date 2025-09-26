@@ -1,0 +1,219 @@
+name: gomall
+
+networks:
+  gomall-net:
+
+volumes:
+  mysql-data:
+  redis-data:
+  kafka-data:
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: gomall-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gomall
+      MYSQL_USER: gomall
+      MYSQL_PASSWORD: gomallpwd
+    command: [
+      "mysqld",
+      "--character-set-server=utf8mb4",
+      "--collation-server=utf8mb4_unicode_ci",
+      "--default-authentication-plugin=mysql_native_password"
+    ]
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpassword"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - gomall-net
+
+  redis:
+    image: redis:8
+    container_name: gomall-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - redis-data:/data
+    networks:
+      - gomall-net
+
+  kafka:
+    image: apache/kafka:4.0.0
+    container_name: gomall-kafka
+    environment:
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_NODE_ID: "1"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+
+      # 监听配置：容器内(INTERNAL)=kafka:9092；宿主机(EXTERNAL)=localhost:9094
+      KAFKA_LISTENERS: "INTERNAL://:9092,CONTROLLER://:9093,EXTERNAL://:9094"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka:9092,EXTERNAL://localhost:9094"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+
+      # KRaft 单节点所需
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+
+      # 首次启动格式化所需的 Cluster ID（固定一个即可）
+      KAFKA_KRAFT_CLUSTER_ID: "qwertyuiopasdfghjklzxc"
+
+      # 开发便利
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9094:9094"   # 宿主机客户端连接
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - gomall-net
+
+  # 用户服务
+  user-service:
+    build:
+      context: .././user/docker
+      dockerfile: Dockerfile
+    container_name: gomall-user
+    environment:
+      DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
+      REDIS_ADDR: redis:6379
+      KAFKA_BROKERS: kafka:9092
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+    networks:
+      - gomall-net
+
+  # 认证服务
+  auth-service:
+    build:
+      context: .././auth/docker
+      dockerfile: Dockerfile
+    container_name: gomall-auth
+    environment:
+      DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
+      REDIS_ADDR: redis:6379
+      KAFKA_BROKERS: kafka:9092
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+    networks:
+      - gomall-net
+
+  # 商品服务
+  product-service:
+    build:
+      context: .././product/docker
+      dockerfile: Dockerfile
+    container_name: gomall-product
+    environment:
+      DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
+      REDIS_ADDR: redis:6379
+      KAFKA_BROKERS: kafka:9092
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+    networks:
+      - gomall-net
+
+  # 购物车服务
+  cart-service:
+    build:
+      context: .././cart/docker
+      dockerfile: dockerfile
+    container_name: gomall-cart
+    environment:
+      DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
+      REDIS_ADDR: redis:6379
+      KAFKA_BROKERS: kafka:9092
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+    networks:
+      - gomall-net
+
+  # 订单服务
+  order-service:
+    build:
+      context: .././order/docker
+      dockerfile: Dockerfile
+    container_name: gomall-order
+    environment:
+      DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
+      REDIS_ADDR: redis:6379
+      KAFKA_BROKERS: kafka:9092
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+    networks:
+      - gomall-net
+
+  # 支付服务
+  payment-service:
+    build:
+      context: .././payment/docker
+      dockerfile: Dockerfile
+    container_name: gomall-payment
+    environment:
+      DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
+      REDIS_ADDR: redis:6379
+      KAFKA_BROKERS: kafka:9092
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+    networks:
+      - gomall-net
+
+  # 库存服务
+  inventory-service:
+    build:
+      context: .././inventory/docker
+      dockerfile: Dockerfile
+    container_name: gomall-inventory
+    environment:
+      DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
+      REDIS_ADDR: redis:6379
+      KAFKA_BROKERS: kafka:9092
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+    networks:
+      - gomall-net
+
+  # 大模型服务
+  llm-service:
+    build:
+      context: .././llm/docker
+    container_name: gomall-llm
+    environment:
+      DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
+      REDIS_ADDR: redis:6379
+      KAFKA_BROKERS: kafka:9092
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+    networks:
+      - gomall-net

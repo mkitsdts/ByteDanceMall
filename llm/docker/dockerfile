@@ -1,0 +1,18 @@
+FROM golang:1.25.1 AS builder
+
+WORKDIR /app
+COPY . .
+
+RUN GOPROXY=https://goproxy.cn,direct && go mod tidy
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+
+FROM alpine:latest
+
+WORKDIR /root/
+COPY --from=builder /app/main .
+COPY --from=builder /app/config.yaml .
+COPY --from=builder /app/docs ./docs
+
+RUN apk --no-cache add ca-certificates
+EXPOSE 8080
+CMD ["./main"]
