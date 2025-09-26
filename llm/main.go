@@ -26,7 +26,7 @@ func main() {
 	reflection.Register(server)
 
 	// // 监听端口
-	port := 14804
+	port := 14801
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	fmt.Println("Listening on port:", port)
 	if err != nil {

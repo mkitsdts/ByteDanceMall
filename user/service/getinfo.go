@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytedancemall/user/model"
+	"bytedancemall/user/pkg"
 	pb "bytedancemall/user/proto"
 	"context"
 	"encoding/json"
@@ -23,7 +24,7 @@ func (s *UserService) GetUserInfo(ctx context.Context, req *pb.GetUserInfoReq) (
 	}
 	maxRetriesTime := 10
 	for i := 0; i < maxRetriesTime; i++ {
-		val, err := s.Redis.Get(ctx, fmt.Sprintf("user:%d", req.UserId)).Result()
+		val, err := pkg.GetCLI().Get(ctx, fmt.Sprintf("user:%d", req.UserId)).Result()
 		if err == nil {
 			var userInfo model.User
 			if err := json.Unmarshal([]byte(val), &userInfo); err != nil {
@@ -34,10 +35,10 @@ func (s *UserService) GetUserInfo(ctx context.Context, req *pb.GetUserInfoReq) (
 				Email:  userInfo.Email,
 			}, nil
 		} else if err == redis.Nil {
-			tx := s.Db.Client.Begin()
+			tx := pkg.DB().Begin()
 			// Fetch user info from the database
 			var email, name string
-			err := s.Db.Client.Model(&model.User{}).Select("email", "name").Where("id = ?", req.UserId).Row().Scan(&email, &name)
+			err := pkg.DB().Model(&model.User{}).Select("email", "name").Where("id = ?", req.UserId).Row().Scan(&email, &name)
 			if err == gorm.ErrRecordNotFound {
 				return &pb.GetUserInfoResp{
 					Exists: false,
@@ -54,7 +55,7 @@ func (s *UserService) GetUserInfo(ctx context.Context, req *pb.GetUserInfoReq) (
 				Name:  name,
 			}
 			body, _ := json.Marshal(userInfo)
-			if err := s.Redis.Set(ctx, fmt.Sprintf("user:%d", req.UserId), string(body), 0).Err(); err != nil {
+			if err := pkg.GetCLI().Set(ctx, fmt.Sprintf("user:%d", req.UserId), string(body), 0).Err(); err != nil {
 				tx.Rollback()
 				return nil, err
 			}

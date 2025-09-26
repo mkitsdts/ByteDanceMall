@@ -19,7 +19,7 @@ func NewRedis() error {
 		return fmt.Errorf("redis configuration is incomplete")
 	} else if len(config.Cfg.Redis.Host) == 1 {
 		client = redis.NewClient(&redis.Options{
-			Addr:     fmt.Sprintf("%s:%d", config.Cfg.Redis.Host[0], config.Cfg.Redis.Port),
+			Addr:     config.Cfg.Redis.Host[0],
 			Password: config.Cfg.Redis.Password,
 			// 参数
 			MaxRetries:   3,

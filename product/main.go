@@ -43,7 +43,7 @@ func main() {
 	pb.RegisterProductCatalogServiceServer(s, productService)
 
 	// 设置监听端口
-	port := 50051
+	port := 14801
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		fmt.Printf("Failed to listen: %v", err)

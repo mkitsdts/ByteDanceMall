@@ -1,35 +1,35 @@
 server: 
-  port: 14802
+  port: 14801
 
 database:
-  master: "localhost"
+  master: "mysql"
   slaves: []
   port: 3306
-  username: "user"
-  password: "password"
+  username: "gomall"
+  password: "gomallpwd"
   name: "inventory"
 
 redis: 
   host: 
-    - "localhost"
+    - "redis"
   port: 6379
 
 kafka_writer: 
   host:
-    - "localhost"
+    - "kafka"
   port: "9092"
   username: ""
   password: ""
   topic: 
-    - "gomall-inventory-deduct",
-    - "gomall-inventory-recovery",
+    - "gomall-inventory-deduct"
+    - "gomall-inventory-recovery"
     - "gomall-inventory-reduct"
 
   group_id: "1"
 
 kafka_reader: 
   host: 
-    - "localhost"
+    - "kafka"
   port: "9092"
   username: "root"
   password: "root"

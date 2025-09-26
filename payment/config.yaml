@@ -1,24 +1,24 @@
 server:
   host: localhost
-  port: 14804
+  port: 14801
   max_http_conns: 100
 
 database:
-  master: localhost
+  master: mysql
   slaves: []
   port: 3306
-  username: user
-  password: password
+  username: gomall
+  password: gomallpwd
   name: payment
 
 redis:
   host:
-    - localhost
+    - redis
   port: 6379
 
 kafka_writer:
   host:
-    - localhost
+    - kafka
   port: "9092"
   username: ""
   password: ""
@@ -29,7 +29,7 @@ kafka_writer:
 
 kafka_reader:
   host:
-    - localhost
+    - kafka
   port: "9092"
   username: root
   password: root

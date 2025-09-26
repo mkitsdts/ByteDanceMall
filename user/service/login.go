@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytedancemall/user/model"
+	"bytedancemall/user/pkg"
 	pb "bytedancemall/user/proto"
 	"bytedancemall/user/utils"
 	"context"
@@ -33,7 +34,7 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginRes
 	var userId uint64
 	var password string
 
-	userIdStr, err := s.Redis.Get(ctx, req.Email).Result()
+	userIdStr, err := pkg.GetCLI().Get(ctx, req.Email).Result()
 	if err != nil && err != redis.Nil {
 		slog.Error("Failed to get user ID", "error:", err)
 		return nil, status.Errorf(codes.Internal, "failed to get user ID from Redis")
@@ -47,7 +48,7 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginRes
 			return nil, status.Errorf(codes.Internal, "failed to parse user ID from Redis")
 		} else {
 			slog.Info("Found user ID in Redis for email", "email", req.Email, "userID", userId)
-			if password, err = s.Redis.Get(ctx, userIdStr).Result(); err != nil {
+			if password, err = pkg.GetCLI().Get(ctx, userIdStr).Result(); err != nil {
 				slog.Error("Failed to get password from Redis for user ID", ":", userId, "error", err)
 			}
 			if password != "" {
@@ -68,14 +69,14 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginRes
 
 	// 如果Redis查询失败或数据不完整，尝试从数据库获取
 	for i := range 3 { // 最多重试3次
-		result := s.Db.GetReader().Where("email = ?", req.Email).First(&user)
+		result := pkg.DB().Where("email = ?", req.Email).First(&user)
 		switch result.Error {
 		case nil:
 			// 查询成功
 			if userId == user.Id && password == user.Password {
 				// 异步更新Redis缓存
 				go func() {
-					pipe := s.Redis.Pipeline()
+					pipe := pkg.GetCLI().Pipeline()
 					pipe.Set(context.Background(), req.Email, strconv.FormatUint(user.Id, 10), 24*time.Hour)
 					pipe.Set(context.Background(), strconv.FormatUint(user.Id, 10), user.Password, 24*time.Hour)
 					_, err := pipe.Exec(context.Background())

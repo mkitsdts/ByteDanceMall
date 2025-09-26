@@ -2,29 +2,30 @@ package pkg
 
 import (
 	"bytedancemall/user/config"
-	"context"
-	"log/slog"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
-func NewRedisClient() (*redis.ClusterClient, error) {
-	// 初始化redis
-	s := redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs:        config.Cfg.RedisConfig.Host,
-		Password:     config.Cfg.RedisConfig.Password,
+var redisClient *redis.Client
+
+// var redisClusterClient *redis.ClusterClient
+
+func GetCLI() *redis.Client {
+	if redisClient == nil {
+		InitRedis()
+	}
+	return redisClient
+}
+
+func InitRedis() error {
+	redisClient = redis.NewClient(&redis.Options{
+		Addr:     config.Conf.Redis.Host[0],
+		Password: config.Conf.Redis.Password,
+		// 参数
 		PoolSize:     50,
 		MinIdleConns: 10,
-		DialTimeout:  5 * time.Second,
-		ReadTimeout:  3 * time.Second,
-		WriteTimeout: 3 * time.Second,
+		PoolTimeout:  2 * time.Second, // 等待可用连接的最大时间
 	})
-	// 测试redis连接
-	if _, err := s.Ping(context.Background()).Result(); err != nil {
-		slog.Error("Failed to connect to Redis", "error", err)
-		return nil, err
-	}
-	slog.Info("Connected to Redis successfully")
-	return s, nil
+	return nil
 }

@@ -87,8 +87,8 @@ services:
   # 用户服务
   user-service:
     build:
-      context: .././user/docker
-      dockerfile: Dockerfile
+      context: ../../user
+      dockerfile: docker/dockerfile
     container_name: gomall-user
     environment:
       DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
@@ -104,8 +104,8 @@ services:
   # 认证服务
   auth-service:
     build:
-      context: .././auth/docker
-      dockerfile: Dockerfile
+      context: ../../auth
+      dockerfile: docker/dockerfile
     container_name: gomall-auth
     environment:
       DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
@@ -121,8 +121,8 @@ services:
   # 商品服务
   product-service:
     build:
-      context: .././product/docker
-      dockerfile: Dockerfile
+      context: ../../product
+      dockerfile: docker/dockerfile
     container_name: gomall-product
     environment:
       DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
@@ -138,8 +138,8 @@ services:
   # 购物车服务
   cart-service:
     build:
-      context: .././cart/docker
-      dockerfile: dockerfile
+      context: ../../cart
+      dockerfile: docker/dockerfile
     container_name: gomall-cart
     environment:
       DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
@@ -155,8 +155,8 @@ services:
   # 订单服务
   order-service:
     build:
-      context: .././order/docker
-      dockerfile: Dockerfile
+      context: ../../order
+      dockerfile: docker/dockerfile
     container_name: gomall-order
     environment:
       DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
@@ -172,8 +172,8 @@ services:
   # 支付服务
   payment-service:
     build:
-      context: .././payment/docker
-      dockerfile: Dockerfile
+      context: ../../payment
+      dockerfile: docker/dockerfile
     container_name: gomall-payment
     environment:
       DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
@@ -189,8 +189,8 @@ services:
   # 库存服务
   inventory-service:
     build:
-      context: .././inventory/docker
-      dockerfile: Dockerfile
+      context: ../../inventory
+      dockerfile: docker/dockerfile
     container_name: gomall-inventory
     environment:
       DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local
@@ -206,7 +206,8 @@ services:
   # 大模型服务
   llm-service:
     build:
-      context: .././llm/docker
+      context: ../../llm
+      dockerfile: docker/dockerfile
     container_name: gomall-llm
     environment:
       DB_DSN: gomall:gomallpwd@tcp(mysql:3306)/gomall?charset=utf8mb4&parseTime=true&loc=Local

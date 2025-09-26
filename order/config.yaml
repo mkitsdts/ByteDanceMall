@@ -1,20 +1,19 @@
 server: 
-  port: 14803
+  port: 14801
 
 database: 
-  master: "order-mysql"
+  master: "mysql"
   slaves: []
   port: 3306
-  username: "test"
-  password: "test"
+  username: "gomall"
+  password: "gomallpwd"
   name: "order"
 
 redis: 
-  host: ["order-redis"]
-  port: 6379
+  host: ["redis:6379"]
 
 kafka_writer: 
-  host: ["order-kafka:9092"]
+  host: ["kafka:9092"]
   username: ""
   password: ""
   topic: [

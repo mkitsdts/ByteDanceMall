@@ -6,7 +6,8 @@ WORKDIR /app
 COPY . .
 
 # 设置 Go 代理
-RUN go env -w  GOPROXY=https://goproxy.io,direct && go mod tidy
+RUN go env -w  GOPROXY=https://goproxy.io,direct
+RUN go mod tidy
 
 # 编译可执行文件
 RUN CGO_ENABLED=0 GOOS=linux go build -o gomall-auth ./main.go

@@ -1,17 +1,16 @@
 database:
-    host: "localhost"
+    host: "mysql"
     port: "3306"
-    user: "cart"
-    password: "cart"
+    user: "gomall"
+    password: "gomallpwd"
     database: "cart"
 
-
 redis:
-    address: ["localhost:6379"]
+    address: ["redis:6379"]
 
 server:
-    port: 14803
+    port: 14801
 
 kafka:
-    brokers: ["localhost:9092"]
+    brokers: ["kafka:9092"]
     topic: "cart"

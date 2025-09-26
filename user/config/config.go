@@ -1,49 +1,53 @@
 package config
 
 import (
-	"encoding/json"
-	"fmt"
+	"log/slog"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
-type MysqlConfig struct {
-	Host     string `json:"host"`
-	Port     string `json:"port"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Database string `json:"database"`
+var Conf *Config = &Config{}
+
+type DatabaseConfig struct {
+	Master       string   `json:"master" yaml:"master"`
+	Slaves       []string `json:"slaves" yaml:"slaves"`
+	Name         string   `json:"name" yaml:"name"`
+	Port         int      `json:"port" yaml:"port"`
+	Username     string   `json:"username" yaml:"username"`
+	Password     string   `json:"password" yaml:"password"`
+	MaxIdleConns int      `json:"max_idle_conns" yaml:"max_idle_conns"`
+	MaxOpenConns int      `json:"max_open_conns" yaml:"max_open_conns"`
 }
 
-type MysqlConfigs struct {
-	Configs []MysqlConfig `json:"configs"`
+type RedisConfig struct {
+	Host     []string `json:"host" yaml:"host"`
+	Port     int      `json:"port" yaml:"port"`
+	Password string   `json:"password" yaml:"password"`
 }
 
-type RedisConfigs struct {
-	Host     []string `json:"host"`
-	Password string   `json:"password"`
+type Server struct {
+	Port int `json:"port" yaml:"port"`
 }
 
 type Config struct {
-	MysqlConfig MysqlConfigs `json:"database"`
-	RedisConfig RedisConfigs `json:"redis"`
+	Server   Server         `json:"server" yaml:"server"`
+	Database DatabaseConfig `json:"database" yaml:"database"`
+	Redis    RedisConfig    `json:"redis" yaml:"redis"`
 }
 
-var Cfg *Config
-
-func InitConfigs(path string) error {
-	// 从配置文件中读取配置
-	file, err := os.Open(path)
-	if err != nil {
-		return fmt.Errorf("failed to open config file: %w", err)
-	}
-	defer file.Close()
-
-	decoder := json.NewDecoder(file)
-	Cfg = &Config{}
-	err = decoder.Decode(Cfg)
+func Init() error {
+	file, err := os.Open("config.yaml")
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
+	decoder := yaml.NewDecoder(file)
+	if err := decoder.Decode(Conf); err != nil {
+		return err
+	}
+
+	slog.Info("Configuration loaded successfully", "config", Conf)
 	return nil
 }
