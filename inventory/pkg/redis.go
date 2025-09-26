@@ -22,7 +22,7 @@ func NewRedisClusterClient() (*redis.ClusterClient, error) {
 
 func NewRedisClient() (*redis.Client, error) {
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: fmt.Sprintf("%s:%d", config.Cfg.Redis.Host[0], config.Cfg.Redis.Port),
+		Addr: fmt.Sprintf("%s:%s", config.Cfg.Redis.Host[0], config.Cfg.Redis.Port),
 	})
 	if err := redisClient.Ping(context.Background()).Err(); err != nil {
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)

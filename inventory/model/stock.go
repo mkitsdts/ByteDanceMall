@@ -18,10 +18,10 @@ type Inventory struct {
 }
 
 type OutInventory struct {
-	ProductID uint64    `json:"product_id"`
-	OrderId   uint64    `json:"order_id" gorm:"primaryKey;unique"`
-	Amount    uint64    `json:"amount"`
-	State     int8      `json:"state"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ProductID uint64     `json:"product_id"`
+	OrderId   uint64     `json:"order_id" gorm:"primaryKey;unique"`
+	Amount    uint64     `json:"amount"`
+	State     int8       `json:"state"`
+	CreatedAt *time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt *time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }

@@ -21,7 +21,7 @@ type Database struct {
 func NewDatabase(models ...any) (*Database, error) {
 	var db Database
 	// 连接主库
-	masterDSN := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+	masterDSN := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		config.Cfg.Database.Username,
 		config.Cfg.Database.Password,
 		config.Cfg.Database.Host,
@@ -54,7 +54,7 @@ func NewDatabase(models ...any) (*Database, error) {
 	// 准备从库DSN
 	var slaveDSNs []gorm.Dialector
 	for _, slave := range config.Cfg.Database.Slaves {
-		slaveDSN := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		slaveDSN := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 			config.Cfg.Database.Username,
 			config.Cfg.Database.Password,
 			slave,

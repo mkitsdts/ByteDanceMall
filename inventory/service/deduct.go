@@ -4,13 +4,9 @@ import (
 	"bytedancemall/inventory/model"
 	pb "bytedancemall/inventory/proto"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"time"
-
-	"github.com/segmentio/kafka-go"
-	"gorm.io/gorm"
 )
 
 // 预扣减库存
@@ -23,86 +19,103 @@ func (s *InventoryService) DeductInventory(ctx context.Context, req *pb.DeductIn
 
 	maxRetries := 3
 
-	var result any
-	var err error
+	lockKey := fmt.Sprint("lock:order:", req.OrderId)
+	// 尝试获取分布式锁
+waitLoop:
 	for i := range maxRetries {
-		result, err = s.deductScript.Run(
-			ctx,
-			s.Redis,
-			[]string{fmt.Sprintf("product:%d", req.Product.ProductId)},
-			req.Product.Amount,
-		).Result()
-		if err == nil {
+		result := s.Redis.SetNX(ctx, lockKey, "0", 30*time.Second)
+		if result.Val() {
+			// 成功获取锁，确保在函数退出时释放锁
+			defer s.Redis.Del(ctx, lockKey)
 			break
-		}
-		if i == maxRetries-1 {
-			slog.Error("Failed to execute Redis script", "error", err)
-			return &pb.DeductInventoryResp{
-				Result: false,
-			}, err
-		}
-	}
-
-	switch v := result.(type) {
-	case int64:
-		// Redis 不存在该库存消息
-		if v == -1 {
-			slog.Warn("Inventory not found in Redis", "product_id", req.Product.ProductId)
-			var inventory model.Inventory
-			if err := s.DB.Master.Where("product_id = ?", req.Product.ProductId).First(&inventory).Error; err != nil {
-				slog.Error("Failed to find inventory in DB", "error", err)
-				if err == gorm.ErrRecordNotFound {
-					go s.Redis.Set(ctx, fmt.Sprintf("product:%d", req.Product.ProductId), 0, 0)
-				}
+		} else if result.Err() == nil {
+			// 等待扣减结果
+			r := s.Redis.Get(ctx, lockKey)
+			if r.Err() != nil && r.Err() != context.Canceled && r.Err() != context.DeadlineExceeded {
+				slog.Error("Failed to get Redis lock status", "error", r.Err())
 				return &pb.DeductInventoryResp{
 					Result: false,
-				}, err
+				}, r.Err()
 			}
+			// 如果锁状态是1，表示扣减成功；如果是2，表示扣减失败
+			if r.Val() == "1" {
+				return &pb.DeductInventoryResp{
+					Result: true,
+				}, nil
+			}
+			if r.Val() == "2" {
+				return &pb.DeductInventoryResp{
+					Result: false,
+				}, nil
+			}
+			for {
+				select {
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				case <-time.After(10 * time.Second):
+					break waitLoop
+				default:
+					time.Sleep(50 * time.Millisecond)
+					result := s.Redis.Get(ctx, lockKey)
+					if result.Err() == nil {
+						if result.Val() == "1" {
+							return &pb.DeductInventoryResp{
+								Result: true,
+							}, nil
+						} else if result.Val() == "2" {
+							return &pb.DeductInventoryResp{
+								Result: false,
+							}, nil
+						}
+					}
+				}
+			}
+		}
+		if i == maxRetries-1 {
+			slog.Error("Failed to execute Redis script", "error", result.Err())
 			return &pb.DeductInventoryResp{
 				Result: false,
-			}, nil
+			}, result.Err()
 		}
-		if v == -2 {
-			slog.Info("Insufficient inventory in Redis", "product_id", req.Product.ProductId)
-			return &pb.DeductInventoryResp{
-				Result: false,
-			}, nil
-		}
-		// 异步发送成功消息
-		go s.writeDeductSuccessMsg(req)
+		time.Sleep(time.Duration(1<<i) * 100 * time.Millisecond)
+	}
+
+	if state := s.inventoryExist(req.OrderId); state == 1 {
 		return &pb.DeductInventoryResp{
 			Result: true,
 		}, nil
-	default:
-		slog.Error("Unexpected result type from Redis script", "type", fmt.Sprintf("%T", v))
+	} else if state == 2 {
 		return &pb.DeductInventoryResp{
 			Result: false,
-		}, fmt.Errorf("unexpected result type from Redis script: %T", v)
+		}, nil
 	}
 
-}
-
-func (s *InventoryService) writeDeductSuccessMsg(req *pb.DeductInventoryReq) {
-	msg := model.DeductMessage{
-		ProductId: req.Product.ProductId,
-		Amount:    req.Product.Amount,
-	}
-	body, _ := json.Marshal(msg)
-	for i := range 3 {
-		if err := s.Writer["gomall-inventory-deduct"].WriteMessages(context.Background(), kafka.Message{
-			Key:   fmt.Appendf(nil, "%d", req.OrderId),
-			Value: body,
-		}); err == nil {
-			slog.Info("Successfully wrote deduct message to Kafka", "inventory_id", req.Product.ProductId, "amount", req.Product.Amount)
-			return
+	// 扣减库存
+	if err := s.deduct(req.Product.ProductId, req.Product.Amount, req.OrderId); err != nil {
+		slog.Error("Failed to deduct inventory", "error", err, "product_id", req.Product.ProductId, "amount", req.Product.Amount)
+		// 扣减失败，设置锁状态为失败
+		result := s.Redis.Set(ctx, lockKey, "2", 30*time.Second)
+		if result.Err() == nil {
+			return &pb.DeductInventoryResp{
+				Result: true,
+			}, nil
 		}
-		// 指数退避重试
-		time.Sleep(time.Duration(1<<i) * time.Second)
+		return &pb.DeductInventoryResp{
+			Result: false,
+		}, err
 	}
-	slog.Error("Failed to write message to Kafka after retries", "inventory_id", req.Product.ProductId)
+	result := s.Redis.Set(ctx, lockKey, "1", 30*time.Second)
+	if result.Err() == nil {
+		return &pb.DeductInventoryResp{
+			Result: true,
+		}, nil
+	}
+	return &pb.DeductInventoryResp{
+		Result: false,
+	}, nil
 }
 
-func (s *InventoryService) deduct(product_id uint64, amount uint64) error {
+func (s *InventoryService) deduct(product_id uint64, amount uint64, order_id uint64) error {
 	slog.Info("Starting inventory deduction", "product_id", product_id, "amount", amount)
 	// 乐观锁重试机制
 	maxRetries := 10
@@ -114,7 +127,7 @@ func (s *InventoryService) deduct(product_id uint64, amount uint64) error {
 			return err
 		}
 		// 检查库存
-		if inventory.TotalStock < amount {
+		if inventory.TotalStock-inventory.LockedStock < amount {
 			tx.Rollback()
 			return fmt.Errorf("insufficient inventory for product_id %d: available %d, requested %d", product_id, inventory.TotalStock, amount)
 		}
@@ -124,7 +137,6 @@ func (s *InventoryService) deduct(product_id uint64, amount uint64) error {
 			Updates(map[string]any{
 				"locked_stock": inventory.LockedStock + amount,
 				"version":      inventory.Version + 1,
-				"updated_at":   time.Now(),
 			})
 
 		if result.Error != nil {
@@ -146,6 +158,19 @@ func (s *InventoryService) deduct(product_id uint64, amount uint64) error {
 			continue
 		}
 
+		// 记录出库信息
+		outInventory := model.OutInventory{
+			ProductID: product_id,
+			OrderId:   order_id,
+			Amount:    amount,
+			State:     1, // 1表示预扣减成功
+		}
+		if err := tx.Create(&outInventory).Error; err != nil {
+			tx.Rollback()
+			slog.Error("Failed to create out inventory record", "error", err)
+			return err
+		}
+
 		// 提交事务
 		if err := tx.Commit().Error; err != nil {
 			slog.Error("Failed to commit transaction", "error", err)
@@ -153,4 +178,16 @@ func (s *InventoryService) deduct(product_id uint64, amount uint64) error {
 		}
 	}
 	return nil
+}
+
+func (s *InventoryService) inventoryExist(OrderID uint64) int8 {
+	state := int8(-128)
+	tx := s.DB.Master.Begin()
+	result := tx.Select("State").Where("order_id = ?", OrderID).First(&state)
+	if result.Error != nil {
+		tx.Rollback()
+		return -128
+	}
+	tx.Commit()
+	return state
 }
