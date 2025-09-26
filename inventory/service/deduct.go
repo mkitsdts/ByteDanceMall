@@ -6,7 +6,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // 预扣减库存
@@ -20,13 +23,30 @@ func (s *InventoryService) DeductInventory(ctx context.Context, req *pb.DeductIn
 	maxRetries := 3
 
 	lockKey := fmt.Sprint("lock:order:", req.OrderId)
+	// 生成一个唯一的锁标识
+	uid := uuid.New().String()
 	// 尝试获取分布式锁
 waitLoop:
 	for i := range maxRetries {
-		result := s.Redis.SetNX(ctx, lockKey, "0", 30*time.Second)
+		result := s.Redis.SetNX(ctx, lockKey, uid+":0", 30*time.Second)
 		if result.Val() {
 			// 成功获取锁，确保在函数退出时释放锁
-			defer s.Redis.Del(ctx, lockKey)
+			defer func() {
+				val, err := s.Redis.Get(ctx, lockKey).Result()
+				if err != nil {
+					slog.Error("Failed to get Redis lock value", "error", err)
+					return
+				}
+				// 只有当锁的标识与我们设置的一致时才释放锁，防止误删他人锁
+				if val == uid+":1" || val == uid+":2" {
+					_, err := s.Redis.Del(ctx, lockKey).Result()
+					if err != nil {
+						slog.Error("Failed to release Redis lock", "error", err)
+					} else {
+						slog.Info("Successfully released Redis lock", "key", lockKey)
+					}
+				}
+			}()
 			break
 		} else if result.Err() == nil {
 			// 等待扣减结果
@@ -38,12 +58,12 @@ waitLoop:
 				}, r.Err()
 			}
 			// 如果锁状态是1，表示扣减成功；如果是2，表示扣减失败
-			if r.Val() == "1" {
+			if strings.Split(r.Val(), ":")[1] == "1" {
 				return &pb.DeductInventoryResp{
 					Result: true,
 				}, nil
 			}
-			if r.Val() == "2" {
+			if strings.Split(r.Val(), ":")[1] == "2" {
 				return &pb.DeductInventoryResp{
 					Result: false,
 				}, nil
@@ -58,11 +78,11 @@ waitLoop:
 					time.Sleep(50 * time.Millisecond)
 					result := s.Redis.Get(ctx, lockKey)
 					if result.Err() == nil {
-						if result.Val() == "1" {
+						if strings.Split(result.Val(), ":")[1] == "1" {
 							return &pb.DeductInventoryResp{
 								Result: true,
 							}, nil
-						} else if result.Val() == "2" {
+						} else if strings.Split(result.Val(), ":")[1] == "2" {
 							return &pb.DeductInventoryResp{
 								Result: false,
 							}, nil
@@ -94,7 +114,7 @@ waitLoop:
 	if err := s.deduct(req.Product.ProductId, req.Product.Amount, req.OrderId); err != nil {
 		slog.Error("Failed to deduct inventory", "error", err, "product_id", req.Product.ProductId, "amount", req.Product.Amount)
 		// 扣减失败，设置锁状态为失败
-		result := s.Redis.Set(ctx, lockKey, "2", 30*time.Second)
+		result := s.Redis.Set(ctx, lockKey, uid+":2", 30*time.Second)
 		if result.Err() == nil {
 			return &pb.DeductInventoryResp{
 				Result: true,

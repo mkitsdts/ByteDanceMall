@@ -14,8 +14,6 @@ func (s *InventoryService) CreateInventory(ctx context.Context, req *pb.CreateIn
 		ProductID:   req.ProductId,
 		TotalStock:  req.Amount,
 		LockedStock: 0,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
 		State:       model.StateOnSale,
 	}
 
