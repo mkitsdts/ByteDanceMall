@@ -1,0 +1,79 @@
+// 商品模块的定义
+
+syntax = "proto3";
+
+package product;
+
+option go_package = "/product";
+
+service ProductCatalogService {
+  rpc ListProducts(ListProductsReq) returns (ListProductsResp) {}
+  rpc GetProductDetail(GetProductDetailReq) returns (GetProductDetailResp) {}
+  rpc SearchProducts(SearchProductsReq) returns (SearchProductsResp) {}
+  rpc CreateProducts(CreateProductsReq) returns (CreateProductsResp) {}
+  rpc UpdateProducts(UpdateProductsReq) returns (UpdateProductsResp) {}
+  rpc DeleteProducts(DeleteProductsReq) returns (DeleteProductsResp) {}
+}
+
+message ListProductsReq{
+  int32 page = 1;
+  int64 pageSize = 2;
+  string categoryName = 3;
+}
+
+message Product {
+  uint64 id = 1;
+  string name = 2;
+  string description = 3;
+  string picture = 4;
+  float price = 5;
+  repeated string categories = 6;
+}
+
+message ListProductsResp {
+  repeated Product products = 1;
+}
+
+message GetProductDetailReq {
+  uint64 product_id = 1;
+}
+
+message GetProductDetailResp {
+  Product product = 1;
+}
+
+message SearchProductsReq {
+  string query = 1;
+  repeated string categories = 2;
+  int64 price = 3;
+  int32 page = 4;
+  int64 pageSize = 5;
+}
+
+message SearchProductsResp {
+  repeated Product results = 1;
+}
+
+message CreateProductsReq {
+  repeated Product product = 1;
+}
+
+message CreateProductsResp {
+  bool result = 1;
+}
+
+message UpdateProductsReq {
+  repeated Product product = 1;
+}
+
+message UpdateProductsResp {
+  bool result = 1;
+}
+
+message DeleteProductsReq {
+  repeated uint64 product_id = 1;
+}
+
+message DeleteProductsResp {
+  bool result = 1;
+}

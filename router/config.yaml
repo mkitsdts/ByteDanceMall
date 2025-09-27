@@ -1,0 +1,27 @@
+auth:
+  host: localhost
+  port: 14801
+
+cart:
+  host: localhost
+  port: 14802
+
+inventory:
+  host: localhost
+  port: 14803
+
+order:
+  host: localhost
+  port: 14804
+
+payment:
+  host: localhost
+  port: 14805
+
+product:
+  host: localhost
+  port: 14806
+  
+user:
+  host: localhost
+  port: 14807

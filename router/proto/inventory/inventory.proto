@@ -1,0 +1,79 @@
+// 库存模块的定义
+
+syntax="proto3";
+
+package inventory;
+
+option go_package="bytedancemall/inventory/proto;inventory";
+
+service InventoryService {
+    // 秒杀预热库存
+    rpc PreheatInventory(PreheatInventoryReq) returns (PreheatInventoryResp) {}
+    // 预扣减库存
+    rpc DeductInventory(DeductInventoryReq) returns (DeductInventoryResp) {}
+    // 恢复库存
+    rpc RecoverInventory(RecoverInventoryReq) returns (RecoverInventoryResp) {}
+    // 创建库存
+    rpc CreateInventory(CreateInventoryReq) returns (CreateInventoryResp) {}
+    // 删除库存
+    rpc DeleteInventory(DeleteInventoryReq) returns (DeleteInventoryResp) {}
+    // 查询库存
+    rpc QueryInventory(QueryInventoryReq) returns (QueryInventoryResp) {}
+}
+
+message Product {
+    uint64 product_id = 1;
+    uint64 amount = 2;
+}
+
+message PreheatInventoryReq {
+    repeated Product products = 1;
+}
+
+message PreheatInventoryResp {
+    bool result = 1;
+}
+
+message DeductInventoryReq {
+    Product product = 1;
+    uint64 order_id = 2;
+}
+
+message DeductInventoryResp {
+    bool result = 1;
+}
+
+message RecoverInventoryReq {
+    uint64 product_id = 1;
+    uint64 amount = 2;
+}
+
+message RecoverInventoryResp {
+    bool result = 1;
+}
+
+message CreateInventoryReq {
+    uint64 product_id = 1;
+    uint64 amount = 2;
+}
+
+message CreateInventoryResp {
+    bool result = 1;
+}
+
+message DeleteInventoryReq {
+    uint64 product_id = 1;
+}
+
+message DeleteInventoryResp {
+    bool result = 1;
+}
+
+message QueryInventoryReq {
+    uint64 product_id = 1;
+}
+
+message QueryInventoryResp {
+    uint64 product_id = 1;
+    uint64 available_stock = 2;
+}

@@ -1,0 +1,24 @@
+FROM golang:1.25.1 AS builder
+
+WORKDIR /app
+
+# 复制源码到容器
+COPY . .
+
+# 设置 Go 代理
+RUN go env -w  GOPROXY=https://goproxy.io,direct && go mod tidy
+
+# 编译可执行文件
+RUN CGO_ENABLED=0 GOOS=linux go build -o gomall-router ./main.go
+
+# 使用更小的基础镜像运行编译后的程序
+FROM alpine:latest
+
+WORKDIR /app
+
+# 复制编译好的二进制文件
+COPY --from=builder /app/gomall-router .
+COPY --from=builder /app/config.yaml .
+
+# 启动服务
+CMD ["./gomall-router"]

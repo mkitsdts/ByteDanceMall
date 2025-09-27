@@ -1,0 +1,42 @@
+// 支付模块的定义
+
+syntax = "proto3";
+
+package payment;
+
+option go_package = "bytedancemall/payment/proto;payment";
+
+service PaymentService {
+  rpc ApplyCharge(ApplyChargeReq) returns (ApplyChargeResp) {}
+  rpc CancelCharge(CancelChargeReq) returns (CancelChargeResp) {}
+  rpc QueryStatus(QueryStatusReq) returns (QueryStatusResp) {}
+}
+
+message ApplyChargeReq {
+  int64 cost = 1;
+  uint64 order_id = 2;
+  uint64 user_id = 3;
+  int32 method = 4;
+}
+
+message ApplyChargeResp {
+  string order_str = 1;
+}
+
+message CancelChargeReq {
+  uint64 order_id = 1;
+}
+
+message CancelChargeResp {
+  string message = 1;
+}
+
+message QueryStatusReq {
+  uint64 order_id = 1;
+}
+
+message QueryStatusResp {
+  uint64 order_id = 1;
+  int32 status = 2;
+  string message = 3;
+}

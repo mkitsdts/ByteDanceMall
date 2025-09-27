@@ -1,0 +1,42 @@
+package middleware
+
+import (
+	"net/http"
+	"sync"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+var limiter map[string]int
+var mux sync.Mutex
+
+func init() {
+	limiter = make(map[string]int)
+}
+
+// 限流中间件
+func RateLimit(maxRequests int, windowSeconds int) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		clientIP := c.ClientIP()
+		mux.Lock()
+		count := limiter[clientIP]
+		limiter[clientIP] = count + 1
+		mux.Unlock()
+		// 在窗口期后减少计数
+		go func() {
+			time.AfterFunc(time.Duration(windowSeconds)*time.Second, func() {
+				mux.Lock()
+				limiter[clientIP]--
+				if limiter[clientIP] <= 0 {
+					delete(limiter, clientIP)
+				}
+				mux.Unlock()
+			})
+		}()
+		if count >= maxRequests {
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"msg": "too many requests"})
+			return
+		}
+	}
+}

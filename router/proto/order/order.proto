@@ -1,0 +1,79 @@
+// 订单模块的定义
+
+syntax = "proto3";
+
+package order;
+
+option go_package = "bytedancemall/order/proto;order";
+
+service OrderService {
+  rpc ListOrder(ListOrderReq) returns (ListOrderResp) {}
+  rpc GetOrderStatus(GetOrderStatusReq) returns (GetOrderStatusResp) {}
+  rpc ApplyOrderID(ApplyOrderIDReq) returns (ApplyOrderIDResp) {}
+  rpc CreateOrder(CreateOrderReq) returns (CreateOrderResp) {}
+  rpc CancelOrder(CancelOrderReq) returns (CancelOrderResp) {}
+}
+
+message GetOrderStatusReq {
+  uint64 order_id = 1;
+}
+
+message GetOrderStatusResp {
+  int32 order_status = 1; // 产品对应的订单状态
+}
+
+message ListOrderReq {
+  uint64 user_id = 1;
+}
+
+message Address {
+  string street_address = 1;
+  string city = 2;
+  string state = 3;
+}
+
+message Order {
+  uint64 product_id = 1;
+  uint64 amount = 2;
+  uint64 user_id = 3;
+  Address address = 4;
+  int64 created_at = 5;
+  int32 status = 6;
+  float cost = 7;
+  uint64 order_id = 8;
+}
+
+message ListOrderResp {
+  repeated Order orders = 1;
+}
+
+message ApplyOrderIDReq {
+  uint64 user_id = 1;
+  string token = 2; // 幂等性token
+}
+
+message ApplyOrderIDResp {
+  uint64 order_id = 1;
+  bool result = 2;
+}
+
+message CreateOrderReq {
+  uint64 user_id = 1;
+  uint64 product_id = 2;
+  uint64 amount = 3;
+  Address address = 4;
+  uint64 order_id = 5;
+  float cost = 6;
+}
+
+message CreateOrderResp {
+  bool result = 1;
+}
+
+message CancelOrderReq {
+  uint64 order_id = 1;
+}
+
+message CancelOrderResp {
+  bool result = 1;
+}
