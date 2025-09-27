@@ -3,6 +3,14 @@ server:
   port: 14801
   max_http_conns: 100
 
+payment:
+  wechat:
+    mchID: "114514"
+    mchCertificateSerialNumber: "114514"
+    mchAPIv3Key: "114514"
+    primaryKeyPath: "path/to/your/private_key.pem"
+    notifyURL: "http://localhost:14801/v1/payment/notify/wechat"
+
 database:
   master: mysql
   slaves: []

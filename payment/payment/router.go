@@ -4,6 +4,6 @@ import "github.com/gin-gonic/gin"
 
 func (pc *PaymentClient) initRouter() {
 	pc.router = gin.Default()
-	pc.router.POST(PaymentNotifyURL, HandlePaymentNotify)
+	pc.router.POST("/payment/notify", HandlePaymentNotify)
 	go pc.router.Run(":8080")
 }

@@ -63,10 +63,10 @@ func (s *PaymentService) CancelCharge(ctx context.Context, req *pb.CancelChargeR
 	return &pb.CancelChargeResp{}, nil
 }
 
-func (s *PaymentService) wechat_pay(ctx context.Context, cost float32, OrderId, UserId uint64) (string, error) {
+func (s *PaymentService) wechat_pay(ctx context.Context, cost int64, OrderId, UserId uint64) (string, error) {
 	return "114514", nil
 }
 
-func (s *PaymentService) alipay(ctx context.Context, cost float32, OrderId, UserId uint64) (string, error) {
+func (s *PaymentService) alipay(ctx context.Context, cost int64, OrderId, UserId uint64) (string, error) {
 	return "114514", nil
 }

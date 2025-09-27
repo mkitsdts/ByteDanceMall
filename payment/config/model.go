@@ -44,10 +44,17 @@ type Server struct {
 	MaxHTTPConns int    `json:"max_http_conns" yaml:"max_http_conns"`
 }
 
+type WeChatPayment struct {
+	AppID                      string `yaml:"app_id"`
+	MchID                      string `yaml:"mch_id"`
+	MchCertificateSerialNumber string `yaml:"mch_certificate_serial_number"`
+	MchAPIv3Key                string `yaml:"mch_api_v3_key"`
+	PrimaryKeyPath             string `yaml:"primary_key_path"`
+	NotifyURL                  string `yaml:"notify_url"`
+}
+
 type Payment struct {
-	AppID         string `json:"app_id" yaml:"app_id"`
-	MachineID     string `json:"machine_id" yaml:"machine_id"`
-	SupportFaPiao bool   `json:"support_fapiao" yaml:"support_fapiao"`
+	WeChat WeChatPayment `yaml:"wechat"`
 }
 
 type Config struct {
