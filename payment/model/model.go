@@ -5,8 +5,8 @@ import (
 )
 
 type PaymentRecord struct {
-	PaymentID string
-	OrderID   uint64
+	ID        uint64 `gorm:"primaryKey;autoIncrement:true"`
+	OrderID   uint64 `gorm:"index"`
 	UserID    uint64
 	Method    string
 	Status    int32
@@ -17,7 +17,9 @@ type PaymentRecord struct {
 }
 
 type PaymentProcess struct {
-	PaymentID    string
+	PaymentID    string     `gorm:"primaryKey"`
+	ID           uint64     `gorm:"autoIncrement:true"`
+	OrderID      uint64     `gorm:"index"`
 	CreatedAt    *time.Time `gorm:"autoCreateTime"`
 	PaySuccessAt *time.Time `gorm:"default:null"`
 	CanceledAt   *time.Time `gorm:"default:null"`

@@ -1,6 +1,7 @@
 package payment
 
 import (
+	"bytedancemall/payment/pkg/database"
 	"log/slog"
 	"time"
 
@@ -32,7 +33,9 @@ func HandleWechatPaymentNotify(c *gin.Context) {
 		return
 	}
 	if body.EventType == "TRANSACTION.SUCCESS" {
-		// 处理支付成功的逻辑，例如更新订单状态
+		// 修改唯一订单状态为已支付
+		// 绑定订单和支付记录
+		database.DB().Table("payment_records").Where("order_id = ?", body.Summary).Update("status", "paid").Update("id", body.ID)
 		slog.Info("payment success", "id", body.ID, "summary", body.Summary)
 		c.JSON(200, gin.H{"status": "success"})
 	}

@@ -2,9 +2,7 @@ package payment
 
 import (
 	"bytedancemall/payment/config"
-	"bytedancemall/payment/model"
 	"bytedancemall/payment/pkg/database"
-	"bytedancemall/payment/util"
 	"context"
 	"crypto/rsa"
 	"fmt"
@@ -77,13 +75,7 @@ func (w *wechat) wechat_pay(ctx context.Context, req *PaymentRequest) string {
 			return ""
 		}
 		for i := range 3 {
-			if err = database.DB().Table("payment_records").Create(&model.PaymentRecord{
-				PaymentID: util.GenerateUUID(),
-				OrderID:   req.OrderID,
-				Method:    "wechat",
-				Status:    model.CREATED,
-				OrderStr:  resp.CodeUrl,
-			}).Error; err != nil {
+			if err = database.DB().Table("payment_records").Update("order_str", resp.CodeUrl).Where("id = ?", req.ID).Error; err != nil {
 				slog.Error("Failed to create payment record, retrying...", "error", err)
 				time.Sleep(10 << i * time.Millisecond)
 			}

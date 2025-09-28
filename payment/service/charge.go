@@ -7,12 +7,14 @@ import (
 	"bytedancemall/payment/pkg/etcd"
 	"bytedancemall/payment/pkg/redis"
 	pb "bytedancemall/payment/proto"
+	"bytedancemall/payment/util"
 	"context"
 	"fmt"
 	"log/slog"
 	"time"
 
 	"go.etcd.io/etcd/client/v3/concurrency"
+	"gorm.io/gorm"
 )
 
 func (s *PaymentService) ApplyCharge(ctx context.Context, req *pb.ApplyChargeReq) (*pb.ApplyChargeResp, error) {
@@ -52,7 +54,7 @@ func (s *PaymentService) ApplyCharge(ctx context.Context, req *pb.ApplyChargeReq
 					break
 				}
 			}
-			time.Sleep(50 << i * time.Millisecond)
+			time.Sleep(100 << i * time.Millisecond)
 		}
 		// 查找数据库日志，判断订单是否创建
 		var records []model.PaymentRecord
@@ -75,6 +77,32 @@ func (s *PaymentService) ApplyCharge(ctx context.Context, req *pb.ApplyChargeReq
 			}
 		}
 	}
+	var curr_id uint64
+	for i := range 3 {
+		result := database.DB().Table("payment_records").Create(&model.PaymentRecord{
+			OrderID: req.OrderId,
+			Method:  "wechat",
+			Status:  model.CREATED,
+		})
+		curr_id = result.Statement.Dest.(*model.PaymentRecord).ID
+		// 这里不能直接用 result.Error 来判断，因为有可能插入成功但是返回的 err 不为 nil
+		if err = result.Error; err != nil && err != gorm.ErrDuplicatedKey {
+			slog.Error("Failed to create payment record, retrying...", "error", err)
+			time.Sleep(10 << i * time.Millisecond)
+		}
+	}
+
+	uuid := util.GenerateUUID()
+	if database.DB().Table("payment_process").Create(&model.PaymentProcess{
+		ID:        curr_id,
+		OrderID:   req.OrderId,
+		PaymentID: uuid,
+	}).Error != nil {
+		slog.Error("Failed to create payment process record", "error", err)
+		return &pb.ApplyChargeResp{
+			OrderStr: "",
+		}, err
+	}
 
 	order_str := s.Client.CreatePaymentRequest(ctx, req.Method, &payment.PaymentRequest{
 		OrderID:     req.OrderId,
@@ -82,6 +110,7 @@ func (s *PaymentService) ApplyCharge(ctx context.Context, req *pb.ApplyChargeReq
 		Cost:        req.Cost,
 		Description: "Test Payment",
 		Attach:      fmt.Sprintf("user_id:%d", req.UserId),
+		ID:          curr_id,
 	})
 
 	if order_str == "" {
@@ -89,7 +118,7 @@ func (s *PaymentService) ApplyCharge(ctx context.Context, req *pb.ApplyChargeReq
 		// 将订单状态设置为失败，防止重复下单
 		redis.GetRedisCli().Set(context.Background(), order_key, "failed", 5*time.Minute)
 		// 删除锁
-
+		mutex.Unlock(context.Background())
 		return &pb.ApplyChargeResp{
 			OrderStr: "",
 		}, err
