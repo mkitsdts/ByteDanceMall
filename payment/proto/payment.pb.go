@@ -28,7 +28,7 @@ type ApplyChargeReq struct {
 	Cost          int64                  `protobuf:"varint,1,opt,name=cost,proto3" json:"cost,omitempty"`
 	OrderId       uint64                 `protobuf:"varint,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 	UserId        uint64                 `protobuf:"varint,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Method        int32                  `protobuf:"varint,4,opt,name=method,proto3" json:"method,omitempty"`
+	Method        string                 `protobuf:"bytes,4,opt,name=method,proto3" json:"method,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -84,11 +84,11 @@ func (x *ApplyChargeReq) GetUserId() uint64 {
 	return 0
 }
 
-func (x *ApplyChargeReq) GetMethod() int32 {
+func (x *ApplyChargeReq) GetMethod() string {
 	if x != nil {
 		return x.Method
 	}
-	return 0
+	return ""
 }
 
 type ApplyChargeResp struct {
@@ -336,7 +336,7 @@ const file_payment_proto_rawDesc = "" +
 	"\x04cost\x18\x01 \x01(\x03R\x04cost\x12\x19\n" +
 	"\border_id\x18\x02 \x01(\x04R\aorderId\x12\x17\n" +
 	"\auser_id\x18\x03 \x01(\x04R\x06userId\x12\x16\n" +
-	"\x06method\x18\x04 \x01(\x05R\x06method\".\n" +
+	"\x06method\x18\x04 \x01(\tR\x06method\".\n" +
 	"\x0fApplyChargeResp\x12\x1b\n" +
 	"\torder_str\x18\x01 \x01(\tR\borderStr\",\n" +
 	"\x0fCancelChargeReq\x12\x19\n" +

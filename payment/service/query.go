@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytedancemall/payment/model"
 	pb "bytedancemall/payment/proto"
 	"context"
 )
@@ -8,6 +9,6 @@ import (
 func (s *PaymentService) QueryStatus(ctx context.Context, req *pb.QueryStatusReq) (*pb.QueryStatusResp, error) {
 	return &pb.QueryStatusResp{
 		OrderId: req.OrderId,
-		Status:  WAITTING,
+		Status:  model.WAITTING,
 	}, nil
 }

@@ -16,7 +16,7 @@ message ApplyChargeReq {
   int64 cost = 1;
   uint64 order_id = 2;
   uint64 user_id = 3;
-  int32 method = 4;
+  string method = 4;
 }
 
 message ApplyChargeResp {

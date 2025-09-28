@@ -5,15 +5,23 @@ import (
 )
 
 type PaymentRecord struct {
-	PaymentID uint64
+	PaymentID string
+	OrderID   uint64
+	UserID    uint64
+	Method    string
+	Status    int32
+	Cost      int64
+	OrderStr  *string    `gorm:"default:null"`
+	CreatedAt *time.Time `gorm:"autoCreateTime"`
+	UpdatedAt *time.Time `gorm:"autoUpdateTime"`
 }
 
 type PaymentProcess struct {
-	PaymentID    uint64
-	CreatedAt    *time.Time
-	PaySuccessAt *time.Time
-	CanceledAt   *time.Time
-	UpdatedAt    *time.Time
-	CompletedAt  *time.Time
-	Status       int32
+	PaymentID    string
+	CreatedAt    *time.Time `gorm:"autoCreateTime"`
+	PaySuccessAt *time.Time `gorm:"default:null"`
+	CanceledAt   *time.Time `gorm:"default:null"`
+	UpdatedAt    *time.Time `gorm:"default:null"`
+	CompletedAt  *time.Time `gorm:"default:null"`
+	Description  string
 }

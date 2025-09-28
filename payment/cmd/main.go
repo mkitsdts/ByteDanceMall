@@ -15,12 +15,6 @@ import (
 )
 
 func main() {
-
-	if err := config.Init(); err != nil {
-		fmt.Println("Failed to load config:", err)
-		return
-	}
-
 	// 设置监听端口
 	port := config.Cfg.Server.Port
 

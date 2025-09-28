@@ -2,6 +2,9 @@ package payment
 
 import (
 	"bytedancemall/payment/config"
+	"bytedancemall/payment/model"
+	"bytedancemall/payment/pkg/database"
+	"bytedancemall/payment/util"
 	"context"
 	"crypto/rsa"
 	"fmt"
@@ -18,14 +21,15 @@ type wechat struct {
 	mchPrivateKey *rsa.PrivateKey
 }
 
-func (w *wechat) Init() error {
+var w = &wechat{}
+
+func init() {
 	var err error
 	w.mchPrivateKey, err = utils.LoadPrivateKeyWithPath(config.Cfg.Payment.WeChat.PrimaryKeyPath)
 	if err != nil {
 		slog.Error("load merchant private key error", "error", err)
-		return fmt.Errorf("load merchant private key error: %w", err)
+		panic(err)
 	}
-	return nil
 }
 
 func (w *wechat) wechat_pay(ctx context.Context, req *PaymentRequest) string {
@@ -43,7 +47,6 @@ func (w *wechat) wechat_pay(ctx context.Context, req *PaymentRequest) string {
 	if err != nil {
 		slog.Error("new wechat pay client error:", " ", err)
 	}
-	// 以 Native 支付为例
 	svc := native.NativeApiService{Client: client}
 	// 发送请求
 	for i := range 3 {
@@ -58,7 +61,7 @@ func (w *wechat) wechat_pay(ctx context.Context, req *PaymentRequest) string {
 				Amount: &native.Amount{
 					Total: core.Int64(100),
 				},
-				TimeExpire: core.Time(time.Now().Add(15 * time.Minute)),
+				TimeExpire: core.Time(time.Now().Add(5 * time.Minute)),
 			},
 		)
 		if err != nil {
@@ -67,6 +70,26 @@ func (w *wechat) wechat_pay(ctx context.Context, req *PaymentRequest) string {
 		}
 		if result.Response.StatusCode != 200 {
 			slog.Error("wechat prepay request failed", "status", result.Response.StatusCode, "body", result.Response.Body)
+			return ""
+		}
+		if resp.CodeUrl == nil || *resp.CodeUrl == "" {
+			slog.Error("wechat prepay response missing code_url")
+			return ""
+		}
+		for i := range 3 {
+			if err = database.DB().Table("payment_records").Create(&model.PaymentRecord{
+				PaymentID: util.GenerateUUID(),
+				OrderID:   req.OrderID,
+				Method:    "wechat",
+				Status:    model.CREATED,
+				OrderStr:  resp.CodeUrl,
+			}).Error; err != nil {
+				slog.Error("Failed to create payment record, retrying...", "error", err)
+				time.Sleep(10 << i * time.Millisecond)
+			}
+		}
+		if err != nil {
+			slog.Error("Failed to create payment record", "error", err)
 			return ""
 		}
 		return *resp.CodeUrl

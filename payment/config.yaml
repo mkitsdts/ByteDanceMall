@@ -3,6 +3,11 @@ server:
   port: 14801
   max_http_conns: 100
 
+etcd:
+  host:
+    - etcd
+  tls: false
+
 payment:
   wechat:
     mchID: "114514"

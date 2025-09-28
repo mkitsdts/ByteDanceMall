@@ -9,11 +9,11 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-func Init() error {
+func init() {
 	// 遍历当前文件夹下所有文件
 	files, err := os.ReadDir(".")
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	path := ""
@@ -28,7 +28,7 @@ func Init() error {
 
 			file, err := os.Open(path)
 			if err != nil {
-				return err
+				panic(err)
 			}
 			defer file.Close()
 			decoder := json.NewDecoder(file)
@@ -43,7 +43,7 @@ func Init() error {
 
 			file, err := os.Open(path)
 			if err != nil {
-				return err
+				panic(err)
 			}
 			defer file.Close()
 			decoder := yaml.NewDecoder(file)
@@ -53,6 +53,4 @@ func Init() error {
 			break
 		}
 	}
-
-	return nil
 }

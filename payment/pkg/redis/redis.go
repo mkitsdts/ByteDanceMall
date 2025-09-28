@@ -37,7 +37,7 @@ func GetRedisCli() *redis.Client {
 	return client
 }
 
-func CheckDuplicate(key string) (bool, string) {
+func CheckDuplicate(key string, value string) (bool, string) {
 	maxRetries := 5
 	var val string
 	var err error
@@ -47,6 +47,9 @@ func CheckDuplicate(key string) (bool, string) {
 			return false, ""
 		}
 		if err == nil {
+			if value != "" && val != value {
+				return false, ""
+			}
 			return true, val
 		}
 		time.Sleep(10 << i * time.Millisecond)

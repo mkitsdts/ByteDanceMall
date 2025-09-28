@@ -44,6 +44,11 @@ type Server struct {
 	MaxHTTPConns int    `json:"max_http_conns" yaml:"max_http_conns"`
 }
 
+type Etcd struct {
+	Host      []string `json:"host" yaml:"host"`
+	EnableTLS bool     `json:"tls" yaml:"tls"`
+}
+
 type WeChatPayment struct {
 	AppID                      string `yaml:"app_id"`
 	MchID                      string `yaml:"mch_id"`
@@ -58,6 +63,7 @@ type Payment struct {
 }
 
 type Config struct {
+	Etcd        Etcd           `json:"etcd" yaml:"etcd"`
 	Server      Server         `json:"server" yaml:"server"`
 	Database    DatabaseConfig `json:"database" yaml:"database"`
 	Redis       RedisConfig    `json:"redis" yaml:"redis"`
