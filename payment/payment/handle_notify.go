@@ -2,10 +2,12 @@ package payment
 
 import (
 	"bytedancemall/payment/pkg/database"
+	kfk "bytedancemall/payment/pkg/kafka"
 	"log/slog"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/segmentio/kafka-go"
 )
 
 type Resource struct {
@@ -35,7 +37,13 @@ func HandleWechatPaymentNotify(c *gin.Context) {
 	if body.EventType == "TRANSACTION.SUCCESS" {
 		// 修改唯一订单状态为已支付
 		// 绑定订单和支付记录
-		database.DB().Table("payment_records").Where("order_id = ?", body.Summary).Update("status", "paid").Update("id", body.ID)
+		database.DB().Table("payment_processes").Where("order_id = ?", body.Summary).Update("status", "paid").Update("id", body.ID)
+		database.DB().Table("payment_records").Where("order_id = ?", body.Summary).Update("status", "paid")
+		kfk.GetWriter("payment_success").WriteMessages(c, kafka.Message{
+			Key:   []byte(body.ID),
+			Value: []byte(body.Summary),
+		})
+		// 这里还要发个消息给订单服务，告诉它支付成功了
 		slog.Info("payment success", "id", body.ID, "summary", body.Summary)
 		c.JSON(200, gin.H{"status": "success"})
 	}

@@ -29,3 +29,15 @@ func (pc *PaymentClient) CreatePaymentRequest(ctx context.Context, method string
 	}
 	return ""
 }
+
+func (pc *PaymentClient) CancelPaymentRequest(ctx context.Context, method string, id string, result chan bool) {
+	select {
+	case <-ctx.Done():
+		result <- false
+	default:
+	}
+	if method == "wechat" {
+		result <- pc.w.cancel_order(ctx, id)
+	}
+	result <- false
+}

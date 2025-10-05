@@ -2,6 +2,7 @@ package payment
 
 import (
 	"bytedancemall/payment/config"
+	"bytedancemall/payment/model"
 	"bytedancemall/payment/pkg/database"
 	"context"
 	"crypto/rsa"
@@ -46,6 +47,7 @@ func (w *wechat) wechat_pay(ctx context.Context, req *PaymentRequest) string {
 		slog.Error("new wechat pay client error:", " ", err)
 	}
 	svc := native.NativeApiService{Client: client}
+	tx := database.DB().Begin()
 	// 发送请求
 	for i := range 3 {
 		resp, result, err := svc.Prepay(ctx,
@@ -74,18 +76,41 @@ func (w *wechat) wechat_pay(ctx context.Context, req *PaymentRequest) string {
 			slog.Error("wechat prepay response missing code_url")
 			return ""
 		}
-		for i := range 3 {
-			if err = database.DB().Table("payment_records").Update("order_str", resp.CodeUrl).Where("id = ?", req.ID).Error; err != nil {
-				slog.Error("Failed to create payment record, retrying...", "error", err)
-				time.Sleep(10 << i * time.Millisecond)
-			}
+		if err = tx.Model(&model.PaymentRecord{}).Create(&model.PaymentRecord{
+			OrderID:  req.OrderID,
+			Status:   model.CREATED,
+			OrderStr: resp.CodeUrl,
+		}).Error; err != nil {
+			slog.Error("Failed to create payment record, retrying...", "error", err)
+			time.Sleep(10 << i * time.Millisecond)
+			continue
 		}
-		if err != nil {
-			slog.Error("Failed to create payment record", "error", err)
-			return ""
+		for i := range 3 {
+			if err = tx.Model(&model.PaymentOrder{}).Where("order_id = ?", req.OrderID).Update("status", model.PAYING).Error; err != nil {
+				slog.Error("Failed to update payment order status to paying, retrying...", "error", err)
+				time.Sleep(10 << i * time.Millisecond)
+				continue
+			}
+			break
+		}
+		for i := range 3 {
+			if err = tx.Commit().Error; err != nil {
+				slog.Error("Failed to commit transaction, retrying...", "error", err)
+				time.Sleep(10 << i * time.Millisecond)
+				continue
+			}
+			break
 		}
 		return *resp.CodeUrl
 	}
 	slog.Error("failed to create wechat prepay order after retries")
 	return ""
+}
+
+func (w *wechat) query_order(ctx context.Context, order_id uint64) bool {
+	return true
+}
+
+func (w *wechat) cancel_order(ctx context.Context, order_id string) bool {
+	return true
 }

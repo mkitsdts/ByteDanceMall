@@ -4,9 +4,8 @@ import (
 	"time"
 )
 
-type PaymentRecord struct {
-	ID        uint64 `gorm:"primaryKey;autoIncrement:true"`
-	OrderID   uint64 `gorm:"index"`
+type PaymentOrder struct {
+	OrderID   uint64 `gorm:"primaryKey"`
 	UserID    uint64
 	Method    string
 	Status    int32
@@ -16,14 +15,11 @@ type PaymentRecord struct {
 	UpdatedAt *time.Time `gorm:"autoUpdateTime"`
 }
 
-type PaymentProcess struct {
-	PaymentID    string     `gorm:"primaryKey"`
-	ID           uint64     `gorm:"autoIncrement:true"`
-	OrderID      uint64     `gorm:"index"`
-	CreatedAt    *time.Time `gorm:"autoCreateTime"`
-	PaySuccessAt *time.Time `gorm:"default:null"`
-	CanceledAt   *time.Time `gorm:"default:null"`
-	UpdatedAt    *time.Time `gorm:"default:null"`
-	CompletedAt  *time.Time `gorm:"default:null"`
-	Description  string
+type PaymentRecord struct {
+	ID        string     `gorm:"primaryKey;autoIncrement:true"`
+	OrderID   uint64     `gorm:"index"`
+	OrderStr  *string    `gorm:"default:null"`
+	Status    int32      `gorm:"default:0"`
+	CreatedAt *time.Time `gorm:"autoCreateTime"`
+	UpdatedAt *time.Time `gorm:"autoUpdateTime"`
 }

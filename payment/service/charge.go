@@ -57,34 +57,95 @@ func (s *PaymentService) ApplyCharge(ctx context.Context, req *pb.ApplyChargeReq
 			time.Sleep(100 << i * time.Millisecond)
 		}
 		// 查找数据库日志，判断订单是否创建
-		var records []model.PaymentRecord
-		if err := database.DB().Table("payment_records").Where("order_id = ?", req.OrderId).Find(&records).Error; err != nil {
-			slog.Error("Failed to query payment create records", "error", err)
-			return &pb.ApplyChargeResp{
-				OrderStr: "",
-			}, err
-		}
-		if len(records) > 0 {
-			for _, record := range records {
-				// 处理每个记录
-				if record.Status == model.CREATED {
-					// 订单创建成功
+		var record model.PaymentOrder
+		if err := database.DB().Where(&model.PaymentOrder{}).Where("order_id = ?", req.OrderId).Find(&record).Error; err == nil {
+			// 订单已创建
+			// 如果支付方式相同且订单已支付，直接返回订单号
+			if record.Method == req.Method {
+				if record.Status > model.WAITTING {
 					go redis.GetRedisCli().Set(ctx, order_key, *record.OrderStr, 5*time.Minute)
 					return &pb.ApplyChargeResp{
 						OrderStr: *record.OrderStr,
 					}, nil
 				}
+			} else { // 支付方式不同且订单未支付，取消原支付请求，创建新支付请求
+				tx := database.DB().Begin()
+				var records []model.PaymentRecord
+				if err := tx.Model(&model.PaymentRecord{}).Where("order_id = ? and status = ?", req.OrderId, model.CREATED).Find(&records).Error; err != nil {
+					slog.Error("Failed to fetch payment records", "error", err)
+					tx.Rollback()
+					return &pb.ApplyChargeResp{
+						OrderStr: "",
+					}, fmt.Errorf("unknown database error")
+				}
+				for _, rec := range records {
+					if rec.Status == model.CREATED {
+						// 取消原支付请求
+						result := make(chan bool, 1)
+						go s.Client.CancelPaymentRequest(ctx, record.Method, rec.ID, result)
+						// 等待结果
+						go func() {
+							transaction := database.DB().Begin()
+							timer := time.After(10 * time.Second)
+							for {
+								select {
+								case <-timer:
+									slog.Error("Timeout waiting for cancel result")
+									transaction.Rollback()
+									return
+								case cancelResult := <-result:
+									if cancelResult {
+										// 更新订单记录
+										if err := transaction.Model(&model.PaymentRecord{}).Where("order_id = ?", req.OrderId).Update("status", model.CANCELED).Error; err != nil {
+											slog.Error("Failed to update order status to canceled", "error", err)
+											transaction.Rollback()
+											return
+										}
+										transaction.Commit()
+									} else {
+										slog.Error("Failed to cancel previous payment request")
+										transaction.Rollback()
+										return
+									}
+								}
+							}
+						}()
+					}
+				}
+				// 创建新的支付请求
+				order_str := s.Client.CreatePaymentRequest(ctx, req.Method, &payment.PaymentRequest{
+					OrderID:     req.OrderId,
+					UserID:      req.UserId,
+					Cost:        req.Cost,
+					Description: "Test Payment",
+					Attach:      fmt.Sprintf("user_id:%d", req.UserId),
+				})
+				if order_str == "" {
+					err := fmt.Errorf("failed to create payment request")
+					// 将订单状态设置为失败，防止重复下单
+					redis.GetRedisCli().Set(context.Background(), order_key, "failed", 5*time.Minute)
+					// 删除锁
+					mutex.Unlock(context.Background())
+					return &pb.ApplyChargeResp{
+						OrderStr: "",
+					}, err
+				}
+				// 成功创建订单后，将订单号存入 redis，防止重复下单
+				go redis.GetRedisCli().Set(context.Background(), order_key, order_str, 5*time.Minute)
+				return &pb.ApplyChargeResp{
+					OrderStr: order_str,
+				}, nil
 			}
 		}
+
 	}
-	var curr_id uint64
+	tx := database.DB().Begin()
 	for i := range 3 {
-		result := database.DB().Table("payment_records").Create(&model.PaymentRecord{
+		result := tx.Model(&model.PaymentOrder{}).Where("order_id = ?", req.OrderId).Create(&model.PaymentOrder{
 			OrderID: req.OrderId,
-			Method:  "wechat",
+			Method:  req.Method,
 			Status:  model.CREATED,
 		})
-		curr_id = result.Statement.Dest.(*model.PaymentRecord).ID
 		// 这里不能直接用 result.Error 来判断，因为有可能插入成功但是返回的 err 不为 nil
 		if err = result.Error; err != nil && err != gorm.ErrDuplicatedKey {
 			slog.Error("Failed to create payment record, retrying...", "error", err)
@@ -93,24 +154,14 @@ func (s *PaymentService) ApplyCharge(ctx context.Context, req *pb.ApplyChargeReq
 	}
 
 	uuid := util.GenerateUUID()
-	if database.DB().Table("payment_process").Create(&model.PaymentProcess{
-		ID:        curr_id,
-		OrderID:   req.OrderId,
-		PaymentID: uuid,
-	}).Error != nil {
-		slog.Error("Failed to create payment process record", "error", err)
-		return &pb.ApplyChargeResp{
-			OrderStr: "",
-		}, err
-	}
 
 	order_str := s.Client.CreatePaymentRequest(ctx, req.Method, &payment.PaymentRequest{
+		ID:          uuid,
 		OrderID:     req.OrderId,
 		UserID:      req.UserId,
 		Cost:        req.Cost,
 		Description: "Test Payment",
 		Attach:      fmt.Sprintf("user_id:%d", req.UserId),
-		ID:          curr_id,
 	})
 
 	if order_str == "" {
