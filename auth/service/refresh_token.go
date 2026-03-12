@@ -6,11 +6,15 @@ import (
 	"strconv"
 	"time"
 
+	"bytedancemall/auth/model"
+	"bytedancemall/auth/pkg/database"
 	rds "bytedancemall/auth/pkg/redis"
 	pb "bytedancemall/auth/proto"
 	"bytedancemall/auth/utils"
 
 	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (s *AuthService) ProlongRefreshToken(ctx context.Context, req *pb.ProlongRefreshTokenReq) (*pb.ProlongRefreshTokenResp, error) {
@@ -36,6 +40,19 @@ func (s *AuthService) ProlongRefreshToken(ctx context.Context, req *pb.ProlongRe
 			return &pb.ProlongRefreshTokenResp{Result: false}, err
 		}
 		time.Sleep(10 << i * time.Millisecond)
+	}
+	userid, err := strconv.ParseUint(val, 10, 64)
+	if err != nil {
+		slog.Error("Invalid user ID in refresh token", "user_id", val)
+		return &pb.ProlongRefreshTokenResp{Result: false}, err
+	}
+	blacklisted, err := s.isUserBlacklisted(ctx, userid)
+	if err != nil {
+		return &pb.ProlongRefreshTokenResp{Result: false}, err
+	}
+	if blacklisted {
+		slog.Warn("Blacklisted user tried to prolong refresh token", "user_id", userid)
+		return &pb.ProlongRefreshTokenResp{Result: false}, nil
 	}
 
 	newRefreshToken, err := utils.GenerateRefreshToken()
@@ -64,30 +81,25 @@ func (s *AuthService) ProlongRefreshToken(ctx context.Context, req *pb.ProlongRe
 		time.Sleep(10 << i * time.Millisecond)
 	}
 	slog.Info("Refresh token prolonged", "old_token", req.RefreshToken, "new_token", newRefreshToken)
-	userid, err := strconv.ParseUint(val, 10, 64)
-	if err != nil {
-		slog.Error("Invalid user ID in refresh token", "user_id", val)
-		return &pb.ProlongRefreshTokenResp{Result: false}, err
-	}
 	go s.asyncSaveToken(userid, req.RefreshToken, newRefreshToken)
 	return &pb.ProlongRefreshTokenResp{Result: true}, nil
 }
 
-func (s *AuthService) RemoveRefreshToken(ctx context.Context, req *pb.RemoveRefreshTokenReq) (*pb.RemoveRefreshTokenResp, error) {
-	cli := rds.GetCLI()
-	refreshToken := "refresh_token:" + req.RefreshToken
-	maxRetries := 5
-	var err error
-	for i := range maxRetries {
-		if _, err = cli.Del(ctx, refreshToken).Result(); err == nil {
-			slog.Info("Refresh token removed", "token", req.RefreshToken)
-			return &pb.RemoveRefreshTokenResp{Result: true}, nil
-		}
-		if i == maxRetries-1 {
-			slog.Error("Redis DEL error", "error", err)
-		}
-		time.Sleep(10 << i * time.Millisecond)
+func (s *AuthService) KickoffUser(ctx context.Context, req *pb.KickoffUserReq) (*pb.KickoffUserResp, error) {
+	err := database.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&model.UserBlacklist{
+			UserID: req.UserId,
+		}).Error
+	})
+	if err != nil {
+		slog.Error("Failed to write blacklist db", "user_id", req.UserId, "error", err)
+		return &pb.KickoffUserResp{Result: false}, err
 	}
-	go s.asyncSaveToken(req.UserId, req.RefreshToken, "")
-	return &pb.RemoveRefreshTokenResp{Result: false}, err
+
+	if err = s.KickoffUserCache(ctx, req.UserId); err != nil {
+		slog.Error("Failed to invalidate blacklist cache", "user_id", req.UserId, "error", err)
+		return &pb.KickoffUserResp{Result: false}, err
+	}
+
+	return &pb.KickoffUserResp{Result: true}, nil
 }

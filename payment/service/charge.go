@@ -174,7 +174,6 @@ func (s *PaymentService) ApplyCharge(ctx context.Context, req *pb.ApplyChargeReq
 			OrderStr: "",
 		}, err
 	}
-
 	// 成功创建订单后，将订单号存入 redis，防止重复下单
 	go redis.GetRedisCli().Set(context.Background(), order_key, order_str, 5*time.Minute)
 	return &pb.ApplyChargeResp{

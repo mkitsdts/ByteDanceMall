@@ -37,7 +37,7 @@ func main() {
 	}
 	for i := range 100 {
 		// 重试连接，防止 mysql 未启动导致连接失败
-		if err := database.NewDatabase(&model.RefreshToken{}); err == nil {
+		if err := database.NewDatabase(&model.RefreshToken{}, &model.UserBlacklist{}); err == nil {
 			break
 		} else if i == 99 {
 			fmt.Println("Failed to initialize database:", err)

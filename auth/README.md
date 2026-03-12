@@ -33,4 +33,4 @@ P99 43.31ms
 - 校验身份令牌    rpc VerifyTokenByRPC(VerifyTokenReq) returns (VerifyTokenResp) {}
 - 刷新身份令牌    rpc RefreshToken(RefreshTokenReq) returns (RefreshTokenResp) {}
 - 续期刷新令牌    rpc ProlongRefreshToken(ProlongRefreshTokenReq) returns (ProlongRefreshTokenResp) {}
-- 移除身份令牌    rpc RemoveRefreshToken(RemoveRefreshTokenReq) returns (RemoveRefreshTokenResp) {}
+- 踢出用户        rpc KickoffUser(KickoffUserReq) returns (KickoffUserResp) {}

@@ -14,6 +14,14 @@ import (
 )
 
 func (s *AuthService) DeliverToken(ctx context.Context, req *pb.DeliverTokenReq) (*pb.DeliveryTokenResp, error) {
+	blacklisted, err := s.isUserBlacklisted(ctx, req.UserId)
+	if err != nil {
+		return &pb.DeliveryTokenResp{Result: false}, err
+	}
+	if blacklisted {
+		return &pb.DeliveryTokenResp{Result: false}, nil
+	}
+
 	token, err := utils.GenerateToken(req.UserId, 5)
 	if err != nil {
 		return &pb.DeliveryTokenResp{Result: false}, err
@@ -70,6 +78,14 @@ func (s *AuthService) RefreshToken(ctx context.Context, req *pb.RefreshTokenReq)
 	if err != nil {
 		slog.Error("Token generation error", "error", err)
 		return &pb.RefreshTokenResp{Result: false}, err
+	}
+	blacklisted, err := s.isUserBlacklisted(ctx, userID)
+	if err != nil {
+		return &pb.RefreshTokenResp{Result: false}, err
+	}
+	if blacklisted {
+		slog.Warn("Blacklisted user tried to refresh token", "user_id", userID)
+		return &pb.RefreshTokenResp{Result: false}, nil
 	}
 	token, err := utils.GenerateToken(userID, 5)
 	if err != nil {

@@ -10,7 +10,7 @@ service AuthService {
     rpc DeliverToken(DeliverTokenReq) returns (DeliveryTokenResp) {}
     rpc VerifyToken(VerifyTokenReq) returns (VerifyTokenResp) {}
     rpc RefreshToken(RefreshTokenReq) returns (RefreshTokenResp) {}
-    rpc RemoveRefreshToken(RemoveRefreshTokenReq) returns (RemoveRefreshTokenResp) {}
+    rpc KickoffUser(KickoffUserReq) returns (KickoffUserResp) {}
     rpc ProlongRefreshToken(ProlongRefreshTokenReq) returns (ProlongRefreshTokenResp) {}
 }
 
@@ -42,12 +42,11 @@ message RefreshTokenResp {
     bool result = 2;
 }
 
-message RemoveRefreshTokenReq {
-    string refresh_token = 1;
-    uint64 user_id = 2;
+message KickoffUserReq {
+    uint64 user_id = 1;
 }
 
-message RemoveRefreshTokenResp {
+message KickoffUserResp {
     bool result = 1;
 }
 

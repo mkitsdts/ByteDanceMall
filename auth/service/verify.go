@@ -33,6 +33,15 @@ func (s *AuthService) VerifyToken(ctx context.Context, req *pb.VerifyTokenReq) (
 		slog.Info("Token expired", "token:", req.Token)
 		return &pb.VerifyTokenResp{Result: false}, nil
 	}
+	blacklisted, err := s.isUserBlacklisted(ctx, claims.UserId)
+	if err != nil {
+		slog.Error("Blacklist check error", "user_id", claims.UserId, "error", err)
+		return &pb.VerifyTokenResp{Result: false}, err
+	}
+	if blacklisted {
+		slog.Warn("Blacklisted user tried to verify token", "user_id", claims.UserId)
+		return &pb.VerifyTokenResp{Result: false}, nil
+	}
 
 	val := ""
 	refreshTokenKey := "refresh_token:" + req.RefreshToken
