@@ -1,7 +1,5 @@
-package pkg
+package database
 
-// 主要用于记录登录日志
-// 留给未来扩展使用
 import (
 	"bytedancemall/user/config"
 	"fmt"
@@ -19,14 +17,9 @@ type Database struct {
 	Slaves []*gorm.DB
 }
 
-var db *Database = &Database{}
+func New(models ...any) (*Database, error) {
+	db := &Database{}
 
-func DB() *gorm.DB {
-	return db.Master
-}
-
-func NewDatabase(models ...any) error {
-	// 连接主库
 	masterDSN := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		config.Conf.Database.Username,
 		config.Conf.Database.Password,
@@ -34,34 +27,33 @@ func NewDatabase(models ...any) error {
 		config.Conf.Database.Port,
 		config.Conf.Database.Name,
 	)
-	maxRetries := 5
+
 	master, err := gorm.Open(mysql.Open(masterDSN), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
+	db.Master = master
 
-	for _, model := range models {
+	maxRetries := 5
+	for _, m := range models {
 		for i := range maxRetries {
-			if err := migrate(master, model); err == nil {
+			if err := migrate(master, m); err == nil {
 				break
 			}
 			time.Sleep(10 << i * time.Millisecond)
 			if i == maxRetries-1 {
-				return fmt.Errorf("failed to auto migrate model %v: %w", model, err)
+				return nil, fmt.Errorf("failed to auto migrate model %v: %w", m, err)
 			}
 		}
 	}
-	slog.Info("Database connected successfully")
-	db.Master = master
 
 	if len(config.Conf.Database.Slaves) == 0 {
-		slog.Info("No slave databases configured, skipping read-write splitting")
-		return nil
+		slog.Info("database connected without replicas")
+		return db, nil
 	}
 
-	// 准备从库DSN
 	var slaveDSNs []gorm.Dialector
 	for _, slave := range config.Conf.Database.Slaves {
 		slaveDSN := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
@@ -74,38 +66,22 @@ func NewDatabase(models ...any) error {
 		slaveDSNs = append(slaveDSNs, mysql.Open(slaveDSN))
 	}
 
-	// 使用DBResolver插件配置读写分离
-	err = master.Use(dbresolver.Register(dbresolver.Config{
-		Sources:  []gorm.Dialector{mysql.Open(masterDSN)}, // 主库（写）
-		Replicas: slaveDSNs,                               // 从库（读）
-		Policy:   dbresolver.RandomPolicy{},               // 随机选择从库
-	}))
-	if err != nil {
-		return err
+	if err := master.Use(dbresolver.Register(dbresolver.Config{
+		Sources:  []gorm.Dialector{mysql.Open(masterDSN)},
+		Replicas: slaveDSNs,
+		Policy:   dbresolver.RandomPolicy{},
+	})); err != nil {
+		return nil, err
 	}
 
-	// 配置连接池
 	if sqlDB, err := master.DB(); err == nil {
 		sqlDB.SetMaxIdleConns(config.Conf.Database.MaxIdleConns)
 		sqlDB.SetMaxOpenConns(config.Conf.Database.MaxOpenConns)
 		sqlDB.SetConnMaxLifetime(time.Hour)
 	}
 
-	// 自动迁移模型
-	for _, model := range models {
-		for i := range maxRetries {
-			if err := migrate(master, model); err == nil {
-				break
-			}
-			time.Sleep(10 << i * time.Millisecond)
-			if i == maxRetries-1 {
-				return fmt.Errorf("failed to auto migrate model %v: %w", model, err)
-			}
-		}
-	}
-	slog.Info("Database connected successfully")
-
-	return nil
+	slog.Info("database connected successfully")
+	return db, nil
 }
 
 func migrate(db *gorm.DB, model any) error {

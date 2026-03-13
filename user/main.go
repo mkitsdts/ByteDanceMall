@@ -1,9 +1,16 @@
 package main
 
 import (
+	"bytedancemall/user/config"
+	"bytedancemall/user/model"
+	dbpkg "bytedancemall/user/pkg/database"
+	redispkg "bytedancemall/user/pkg/redis"
 	pb "bytedancemall/user/proto"
+	"bytedancemall/user/repository"
 	"bytedancemall/user/service"
+	"bytedancemall/user/usecase"
 	"fmt"
+	"log/slog"
 	"net"
 
 	"google.golang.org/grpc"
@@ -11,31 +18,44 @@ import (
 )
 
 func main() {
-	// 设置监听端口
-	port := 50051
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		fmt.Printf("Failed to listen: %v", err)
-	}
-
-	// 创建gRPC服务器
-	s := grpc.NewServer()
-
-	// 创建并注册UserService
-	userService, err := service.NewUserService()
-	if err != nil {
-		fmt.Printf("Failed to create user service: %v", err)
+	if err := config.Init(); err != nil {
+		slog.Error("failed to initialize config", "error", err)
 		return
 	}
+
+	database, err := dbpkg.New(&model.User{}, &model.LoginRecord{})
+	if err != nil {
+		slog.Error("failed to initialize database", "error", err)
+		return
+	}
+
+	redisClient, err := redispkg.NewClient()
+	if err != nil {
+		slog.Error("failed to initialize redis", "error", err)
+		return
+	}
+
+	repos := repository.New(database.Master, redisClient)
+	userUsecase := usecase.New(repos)
+	userService := service.New(userUsecase)
+
+	port := config.Conf.Server.Port
+	if port == 0 {
+		port = 50051
+	}
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		slog.Error("failed to listen", "port", port, "error", err)
+		return
+	}
+
+	s := grpc.NewServer()
 	pb.RegisterUserServiceServer(s, userService)
-
-	// 注册reflection服务，便于使用grpcurl等工具调试
 	reflection.Register(s)
+	slog.Info("user service started", "port", port)
 
-	fmt.Printf("用户服务启动成功，监听端口: %d", port)
-
-	// 启动服务
 	if err := s.Serve(lis); err != nil {
-		fmt.Printf("Failed to serve: %v", err)
+		slog.Error("failed to serve", "error", err)
 	}
 }
