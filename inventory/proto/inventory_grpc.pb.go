@@ -23,7 +23,6 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	InventoryService_PreheatInventory_FullMethodName = "/inventory.InventoryService/PreheatInventory"
 	InventoryService_DeductInventory_FullMethodName  = "/inventory.InventoryService/DeductInventory"
-	InventoryService_RecoverInventory_FullMethodName = "/inventory.InventoryService/RecoverInventory"
 	InventoryService_CreateInventory_FullMethodName  = "/inventory.InventoryService/CreateInventory"
 	InventoryService_DeleteInventory_FullMethodName  = "/inventory.InventoryService/DeleteInventory"
 	InventoryService_QueryInventory_FullMethodName   = "/inventory.InventoryService/QueryInventory"
@@ -37,8 +36,6 @@ type InventoryServiceClient interface {
 	PreheatInventory(ctx context.Context, in *PreheatInventoryReq, opts ...grpc.CallOption) (*PreheatInventoryResp, error)
 	// 预扣减库存
 	DeductInventory(ctx context.Context, in *DeductInventoryReq, opts ...grpc.CallOption) (*DeductInventoryResp, error)
-	// 恢复库存
-	RecoverInventory(ctx context.Context, in *RecoverInventoryReq, opts ...grpc.CallOption) (*RecoverInventoryResp, error)
 	// 创建库存
 	CreateInventory(ctx context.Context, in *CreateInventoryReq, opts ...grpc.CallOption) (*CreateInventoryResp, error)
 	// 删除库存
@@ -69,16 +66,6 @@ func (c *inventoryServiceClient) DeductInventory(ctx context.Context, in *Deduct
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeductInventoryResp)
 	err := c.cc.Invoke(ctx, InventoryService_DeductInventory_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *inventoryServiceClient) RecoverInventory(ctx context.Context, in *RecoverInventoryReq, opts ...grpc.CallOption) (*RecoverInventoryResp, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RecoverInventoryResp)
-	err := c.cc.Invoke(ctx, InventoryService_RecoverInventory_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -123,8 +110,6 @@ type InventoryServiceServer interface {
 	PreheatInventory(context.Context, *PreheatInventoryReq) (*PreheatInventoryResp, error)
 	// 预扣减库存
 	DeductInventory(context.Context, *DeductInventoryReq) (*DeductInventoryResp, error)
-	// 恢复库存
-	RecoverInventory(context.Context, *RecoverInventoryReq) (*RecoverInventoryResp, error)
 	// 创建库存
 	CreateInventory(context.Context, *CreateInventoryReq) (*CreateInventoryResp, error)
 	// 删除库存
@@ -146,9 +131,6 @@ func (UnimplementedInventoryServiceServer) PreheatInventory(context.Context, *Pr
 }
 func (UnimplementedInventoryServiceServer) DeductInventory(context.Context, *DeductInventoryReq) (*DeductInventoryResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeductInventory not implemented")
-}
-func (UnimplementedInventoryServiceServer) RecoverInventory(context.Context, *RecoverInventoryReq) (*RecoverInventoryResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RecoverInventory not implemented")
 }
 func (UnimplementedInventoryServiceServer) CreateInventory(context.Context, *CreateInventoryReq) (*CreateInventoryResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateInventory not implemented")
@@ -212,24 +194,6 @@ func _InventoryService_DeductInventory_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(InventoryServiceServer).DeductInventory(ctx, req.(*DeductInventoryReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _InventoryService_RecoverInventory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RecoverInventoryReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(InventoryServiceServer).RecoverInventory(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: InventoryService_RecoverInventory_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InventoryServiceServer).RecoverInventory(ctx, req.(*RecoverInventoryReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -302,10 +266,6 @@ var InventoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeductInventory",
 			Handler:    _InventoryService_DeductInventory_Handler,
-		},
-		{
-			MethodName: "RecoverInventory",
-			Handler:    _InventoryService_RecoverInventory_Handler,
 		},
 		{
 			MethodName: "CreateInventory",

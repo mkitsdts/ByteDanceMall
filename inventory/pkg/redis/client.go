@@ -1,16 +1,15 @@
-package pkg
+package redis
 
 import (
 	"bytedancemall/inventory/config"
 	"context"
 	"fmt"
 
-	"github.com/redis/go-redis/v9"
+	goredis "github.com/redis/go-redis/v9"
 )
 
-func NewRedisClusterClient() (*redis.ClusterClient, error) {
-
-	redisClient := redis.NewClusterClient(&redis.ClusterOptions{
+func NewClusterClient() (*goredis.ClusterClient, error) {
+	redisClient := goredis.NewClusterClient(&goredis.ClusterOptions{
 		Addrs:    config.Cfg.Redis.Host,
 		Password: config.Cfg.Redis.Password,
 	})
@@ -20,8 +19,8 @@ func NewRedisClusterClient() (*redis.ClusterClient, error) {
 	return redisClient, nil
 }
 
-func NewRedisClient() (*redis.Client, error) {
-	redisClient := redis.NewClient(&redis.Options{
+func NewClient() (*goredis.Client, error) {
+	redisClient := goredis.NewClient(&goredis.Options{
 		Addr: fmt.Sprintf("%s:%s", config.Cfg.Redis.Host[0], config.Cfg.Redis.Port),
 	})
 	if err := redisClient.Ping(context.Background()).Err(); err != nil {

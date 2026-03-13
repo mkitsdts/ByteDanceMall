@@ -1,11 +1,16 @@
 package main
 
 import (
+	"bytedancemall/inventory/cache"
 	"bytedancemall/inventory/config"
 	"bytedancemall/inventory/model"
-	"bytedancemall/inventory/pkg"
+	dbpkg "bytedancemall/inventory/pkg/database"
+	kafkapkg "bytedancemall/inventory/pkg/kafka"
+	redispkg "bytedancemall/inventory/pkg/redis"
 	pb "bytedancemall/inventory/proto"
+	"bytedancemall/inventory/repository"
 	"bytedancemall/inventory/service"
+	"bytedancemall/inventory/usecase"
 	"fmt"
 	"net"
 
@@ -30,39 +35,37 @@ func main() {
 		return
 	}
 
-	database, err := pkg.NewDatabase(&model.Inventory{}, &model.OutInventory{})
+	database, err := dbpkg.New(&model.Inventory{}, &model.OutInventory{})
 	if err != nil {
 		fmt.Printf("Failed to initialize database: %v", err)
 		return
 	}
 
-	// redis, err := pkg.NewRedisClusterClient(&cfg.Redis)
+	// redis, err := redispkg.NewClusterClient()
 	// if err != nil {
 	// 	fmt.Printf("Failed to initialize redis: %v", err)
 	// 	return
 	// }
 
-	redis, err := pkg.NewRedisClient()
+	redis, err := redispkg.NewClient()
 	if err != nil {
 		fmt.Printf("Failed to initialize redis: %v", err)
 		return
 	}
 
-	reader, err := pkg.NewKafkaReader()
+	reader, err := kafkapkg.NewReader()
 	if err != nil {
 		fmt.Printf("Failed to initialize kafka: %v", err)
 		return
 	}
 
-	writer, err := pkg.NewKafkaWriter()
-	if err != nil {
-		fmt.Printf("Failed to initialize kafka writer: %v", err)
-		return
-	}
+	repos := repository.New(database.Master)
+	cacheStore := cache.New(redis)
+	inventoryUsecase := usecase.New(repos, cacheStore)
 
 	// 创建并注册InventoryService
-	service := service.NewInventoryService(database, redis, writer, reader)
-	pb.RegisterInventoryServiceServer(s, service)
+	inventoryService := service.NewInventoryService(inventoryUsecase, reader)
+	pb.RegisterInventoryServiceServer(s, inventoryService)
 
 	// 注册reflection服务，便于使用grpcurl等工具调试
 	reflection.Register(s)
