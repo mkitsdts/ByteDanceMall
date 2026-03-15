@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytedancemall/auth/config"
 	rds "bytedancemall/auth/pkg/redis"
 	pb "bytedancemall/auth/proto"
 	"bytedancemall/auth/utils"
@@ -14,14 +15,15 @@ import (
 )
 
 func (s *AuthService) DeliverToken(ctx context.Context, req *pb.DeliverTokenReq) (*pb.DeliveryTokenResp, error) {
-	blacklisted, err := s.isUserBlacklisted(ctx, req.UserId)
-	if err != nil {
-		return &pb.DeliveryTokenResp{Result: false}, err
+	if !config.Conf.Server.Debug {
+		blacklisted, err := s.isUserBlacklisted(ctx, req.UserId)
+		if err != nil {
+			return &pb.DeliveryTokenResp{Result: false}, err
+		}
+		if blacklisted {
+			return &pb.DeliveryTokenResp{Result: false}, nil
+		}
 	}
-	if blacklisted {
-		return &pb.DeliveryTokenResp{Result: false}, nil
-	}
-
 	token, err := utils.GenerateToken(req.UserId, 5)
 	if err != nil {
 		return &pb.DeliveryTokenResp{Result: false}, err

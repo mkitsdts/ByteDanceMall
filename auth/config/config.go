@@ -27,7 +27,8 @@ type RedisConfig struct {
 }
 
 type Server struct {
-	Port int `json:"port" yaml:"port"`
+	Port  int  `json:"port" yaml:"port"`
+	Debug bool `json:"debug" yaml:"debug"`
 }
 
 type Config struct {
